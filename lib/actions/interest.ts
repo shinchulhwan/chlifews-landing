@@ -2,8 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { sendAdminNewCustomerNotification } from "@/lib/notifications";
-import { createSupabaseClient } from "@/lib/supabase";
+import { createSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import { formatSupabaseError } from "@/lib/supabase/errors";
 import { tryCreateServiceRoleClient } from "@/lib/supabase/admin";
+import {
+  buildCustomerInsertRow,
+  CUSTOMERS_TABLE,
+  CUSTOMER_COLUMNS,
+} from "@/lib/supabase/customers-schema";
 import { normalizeCreatedAt } from "@/lib/format/created-at";
 import { getSiteNameForInsert } from "@/lib/config/site";
 import { buildNewCustomerSmsPayload } from "@/lib/services/sms/build-payload";
@@ -32,12 +38,8 @@ type SaveCustomerResult =
   | { ok: false; error: PostgrestError };
 
 function logSupabaseError(context: string, error: PostgrestError): void {
-  console.error(`[${context}] Supabase error`, {
-    message: error.message,
-    code: error.code,
-    details: error.details,
-    hint: error.hint,
-  });
+  console.error(`[${context}] Supabase error`, error);
+  console.error(`[${context}] Supabase error message:`, error.message);
 }
 
 function toNotificationCustomer(
@@ -62,23 +64,17 @@ async function insertCustomer(
   input: CustomerInput,
   context: string,
 ): Promise<SaveCustomerResult> {
-  const siteName = (process.env.SITE_NAME ?? "").trim();
+  const siteName = getSiteNameForInsert();
+  const row = buildCustomerInsertRow(input, siteName);
 
-  console.log(
-    "[submitInterestCustomer] SITE_NAME env:",
-    siteName || "(empty)",
-  );
+  console.log(`[${context}] table:`, CUSTOMERS_TABLE);
+  console.log(`[${context}] insert row:`, row);
 
-  const row = {
-    name: input.name,
-    phone: input.phone,
-    memo: input.memo,
-    site_name: siteName,
-  };
-
-  const { error } = await supabase.from("customers").insert(row);
+  const { error } = await supabase.from(CUSTOMERS_TABLE).insert(row);
 
   if (error) {
+    console.error(`[${context}] insert failed:`, error);
+    console.error(`[${context}] insert failed message:`, error.message);
     logSupabaseError(context, error);
     return { ok: false, error };
   }
@@ -88,13 +84,18 @@ async function insertCustomer(
     siteName || "(empty)",
   );
 
-  const { data: verify } = await supabase
-    .from("customers")
-    .select("created_at, site_name")
-    .eq("phone", input.phone)
-    .order("created_at", { ascending: false })
+  const { data: verify, error: verifyError } = await supabase
+    .from(CUSTOMERS_TABLE)
+    .select(`${CUSTOMER_COLUMNS.created_at}, ${CUSTOMER_COLUMNS.site_name}`)
+    .eq(CUSTOMER_COLUMNS.phone, input.phone)
+    .order(CUSTOMER_COLUMNS.created_at, { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (verifyError) {
+    console.error(`[${context}] verify select failed:`, verifyError);
+    console.error(`[${context}] verify select message:`, verifyError.message);
+  }
 
   if (verify) {
     console.log(
@@ -110,6 +111,18 @@ async function insertCustomer(
 }
 
 async function saveCustomer(input: CustomerInput): Promise<SaveCustomerResult> {
+  if (!isSupabaseConfigured()) {
+    const configError = {
+      message:
+        "Supabase 환경 변수가 없습니다. .env.local에 NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정하세요.",
+      code: "ENV_MISSING",
+      details: "",
+      hint: "",
+    } as PostgrestError;
+    console.error("[saveCustomer] Supabase not configured");
+    return { ok: false, error: configError };
+  }
+
   const anonClient = createSupabaseClient();
 
   const anonResult = await insertCustomer(
@@ -131,20 +144,9 @@ async function saveCustomer(input: CustomerInput): Promise<SaveCustomerResult> {
     if (serviceResult.ok) {
       return serviceResult;
     }
+    return serviceResult;
   }
 
-  const { error: rpcError } = await anonClient.rpc("register_customer", {
-    p_name: input.name,
-    p_phone: input.phone,
-    p_memo: input.memo,
-    p_site_name: getSiteNameForInsert(),
-  });
-
-  if (!rpcError) {
-    return { ok: true, created_at: null };
-  }
-
-  logSupabaseError("submitInterestCustomer:rpc", rpcError);
   return anonResult;
 }
 
@@ -179,7 +181,15 @@ export async function submitInterestCustomer(
     const saveResult = await saveCustomer(customerInput);
 
     if (!saveResult.ok) {
-      return { success: false, message: FAILURE_MESSAGE };
+      console.error("[submitInterestCustomer] insert failed:", saveResult.error);
+      console.error(
+        "[submitInterestCustomer] insert failed message:",
+        saveResult.error.message,
+      );
+      return {
+        success: false,
+        message: saveResult.error.message || FAILURE_MESSAGE,
+      };
     }
 
     const smsPayload = buildNewCustomerSmsPayload(
@@ -191,7 +201,8 @@ export async function submitInterestCustomer(
       await sendAdminNewCustomerSms(smsPayload);
     } catch (error) {
       console.log("===== SMS FAIL =====");
-      console.log(
+      console.error(error);
+      console.error(
         error instanceof Error ? error.message : "알 수 없는 SMS 오류",
       );
     }
@@ -212,6 +223,13 @@ export async function submitInterestCustomer(
     return { success: true, message: SUCCESS_MESSAGE };
   } catch (error) {
     console.error("[submitInterestCustomer]", error);
-    return { success: false, message: FAILURE_MESSAGE };
+    console.error(
+      "[submitInterestCustomer]",
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      success: false,
+      message: formatSupabaseError(error) || FAILURE_MESSAGE,
+    };
   }
 }

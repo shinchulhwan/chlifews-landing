@@ -28,11 +28,6 @@ export function formatSupabaseError(error: unknown): string {
 }
 
 export function logSupabaseError(context: string, error: PostgrestError): void {
-  console.log(error);
-  console.error(`[${context}] Supabase error`, {
-    message: error.message,
-    code: error.code,
-    details: error.details,
-    hint: error.hint,
-  });
+  console.error(`[${context}] Supabase error`, error);
+  console.error(`[${context}] Supabase error message:`, error.message);
 }

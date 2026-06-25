@@ -24,6 +24,12 @@ import {
   EMPTY_SITE_TAB,
   normalizeSiteTabKey,
 } from "@/lib/admin/site-tabs";
+import {
+  CUSTOMERS_TABLE,
+  CUSTOMER_COLUMNS,
+  CUSTOMER_SELECT,
+} from "@/lib/supabase/customers-schema";
+import type { CustomerStatus } from "@/lib/types/interest-customer";
 
 function normalizePhone(value: string): string {
   return value.replace(/\D/g, "");
@@ -49,6 +55,13 @@ function requireClient(): SupabaseClient<Database> {
   return client;
 }
 
+function normalizeDbStatus(status: string | undefined): CustomerStatus {
+  if (status === "completed" || status === "완료") {
+    return "completed";
+  }
+  return "pending";
+}
+
 function toInterestCustomer(row: Customer): InterestCustomer {
   return {
     id: row.id,
@@ -58,7 +71,7 @@ function toInterestCustomer(row: Customer): InterestCustomer {
     visit_date: null,
     memo: row.memo,
     site_name: row.site_name ?? "",
-    status: row.status ?? "pending",
+    status: normalizeDbStatus(row.status),
     created_at: normalizeCreatedAt(row.created_at),
   };
 }
@@ -74,14 +87,21 @@ function applySiteFilter<
     return query.or("site_name.is.null,site_name.eq.");
   }
 
-  return query.eq("site_name", siteKey);
+  return query.eq(CUSTOMER_COLUMNS.site_name, siteKey);
 }
 
 function applyStatusFilter<
-  T extends { eq: (column: string, value: string) => T },
+  T extends {
+    eq: (column: string, value: string) => T;
+    or: (filters: string) => T;
+  },
 >(query: T, status: CustomerStatusFilter): T {
-  if (status === "pending" || status === "completed") {
-    return query.eq("status", status);
+  if (status === "pending") {
+    return query.or("status.eq.pending,status.eq.대기,status.is.null");
+  }
+
+  if (status === "completed") {
+    return query.or("status.eq.completed,status.eq.완료");
   }
 
   return query;
@@ -101,7 +121,7 @@ function applySearchFilters<
     const phonePattern = digits ? `%${digits}%` : `%${escaped}%`;
 
     query = query.or(
-      `name.ilike.%${escaped}%,memo.ilike.%${escaped}%,site_name.ilike.%${escaped}%,phone.ilike.${phonePattern}`,
+      `${CUSTOMER_COLUMNS.name}.ilike.%${escaped}%,${CUSTOMER_COLUMNS.memo}.ilike.%${escaped}%,${CUSTOMER_COLUMNS.site_name}.ilike.%${escaped}%,${CUSTOMER_COLUMNS.phone}.ilike.${phonePattern}`,
     );
   }
 
@@ -109,7 +129,7 @@ function applySearchFilters<
 
   if (phoneQuery) {
     const digits = normalizePhone(phoneQuery);
-    query = query.ilike("phone", `%${digits || phoneQuery}%`);
+    query = query.ilike(CUSTOMER_COLUMNS.phone, `%${digits || phoneQuery}%`);
   }
 
   return query;
@@ -128,9 +148,9 @@ export async function searchCustomers(
   const status = params.status ?? "all";
 
   let query = supabase
-    .from("customers")
-    .select("id, name, phone, memo, site_name, status, created_at")
-    .order("created_at", { ascending: false, nullsFirst: false });
+    .from(CUSTOMERS_TABLE)
+    .select(CUSTOMER_SELECT)
+    .order(CUSTOMER_COLUMNS.created_at, { ascending: false, nullsFirst: false });
 
   query = applySiteFilter(query, params.site_name);
   query = applyStatusFilter(query, status);
@@ -156,17 +176,17 @@ export async function getCustomerStats(
     filters?: { status?: CustomerStatusFilter; today?: boolean },
   ): Promise<number> {
     let query = supabase
-      .from("customers")
+      .from(CUSTOMERS_TABLE)
       .select("*", { count: "exact", head: true });
 
     query = applySiteFilter(query, siteKey);
 
     if (filters?.status && filters.status !== "all") {
-      query = query.eq("status", filters.status);
+      query = applyStatusFilter(query, filters.status);
     }
 
     if (filters?.today) {
-      query = query.gte("created_at", todayIso);
+      query = query.gte(CUSTOMER_COLUMNS.created_at, todayIso);
     }
 
     const { count, error } = await query;
@@ -192,7 +212,9 @@ export async function getCustomerStats(
 export async function getSiteTabCounts(): Promise<SiteTabCounts> {
   const supabase = requireClient();
 
-  const { data, error } = await supabase.from("customers").select("site_name");
+  const { data, error } = await supabase
+    .from(CUSTOMERS_TABLE)
+    .select(CUSTOMER_COLUMNS.site_name);
 
   if (error) {
     logSupabaseError("customers:site_tabs", error);
@@ -245,7 +267,10 @@ export async function deleteCustomer(id: number | string): Promise<boolean> {
 
   console.log("[deleteCustomer] delete id:", id, "typeof:", typeof id);
 
-  const { error } = await supabase.from("customers").delete().eq("id", id);
+  const { error } = await supabase
+    .from(CUSTOMERS_TABLE)
+    .delete()
+    .eq(CUSTOMER_COLUMNS.id, id);
 
   if (error) {
     logSupabaseError("customers:delete", error);
@@ -253,9 +278,9 @@ export async function deleteCustomer(id: number | string): Promise<boolean> {
   }
 
   const { data: stillExists, error: verifyError } = await supabase
-    .from("customers")
-    .select("id")
-    .eq("id", id)
+    .from(CUSTOMERS_TABLE)
+    .select(CUSTOMER_COLUMNS.id)
+    .eq(CUSTOMER_COLUMNS.id, id)
     .maybeSingle();
 
   if (verifyError) {
@@ -286,9 +311,9 @@ export async function deleteCustomers(
   console.log("[deleteCustomers] ids:", validIds);
 
   const { error, count } = await supabase
-    .from("customers")
+    .from(CUSTOMERS_TABLE)
     .delete({ count: "exact" })
-    .in("id", validIds);
+    .in(CUSTOMER_COLUMNS.id, validIds);
 
   if (error) {
     logSupabaseError("customers:bulk-delete", error);
@@ -305,10 +330,10 @@ export async function completeCustomer(id: string): Promise<boolean> {
   const supabase = requireClient();
 
   const direct = await supabase
-    .from("customers")
+    .from(CUSTOMERS_TABLE)
     .update({ status: "completed" })
-    .eq("id", id)
-    .select("id")
+    .eq(CUSTOMER_COLUMNS.id, id)
+    .select(CUSTOMER_COLUMNS.id)
     .maybeSingle();
 
   if (!direct.error && direct.data) {
