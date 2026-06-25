@@ -5,7 +5,7 @@ export function toNotificationPayload(
   customer: InterestCustomer,
 ): AdminNotificationPayload {
   return {
-    customerId: customer.id,
+    customerId: String(customer.id),
     name: customer.name,
     phone: customer.phone,
     type: customer.type,

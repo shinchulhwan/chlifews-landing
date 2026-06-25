@@ -56,7 +56,7 @@ async function requireAdmin(): Promise<AdminActionResult | null> {
   return null;
 }
 
-function supabaseConfigError(): AdminActionResult {
+function supabaseConfigError<T = undefined>(): AdminActionResult<T> {
   const message =
     "Supabase 환경 변수가 없습니다. .env.local의 NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY를 확인하세요.";
   console.log(message);
@@ -90,7 +90,7 @@ export async function getAdminDashboardData(
   }
 
   if (!isSupabaseConfigured()) {
-    return supabaseConfigError();
+    return supabaseConfigError<AdminDashboardData>();
   }
 
   try {
