@@ -6,12 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:supabase": "npx tsx scripts/test-supabase.ts",
+    "test:customers-insert": "npx tsx scripts/test-customers-insert.ts",
+    "test:customers-select": "npx tsx scripts/test-customers-select.ts",
+    "test:solapi-sms": "npx tsx scripts/test-solapi-sms.ts",
+    "test:sms-env": "npx tsx scripts/test-sms-env.ts",
+    "test:site-name-insert": "npx tsx scripts/test-site-name-insert.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "framer-motion": "^12.42.0",
+    "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -21,6 +31,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }
