@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { OG_IMAGE_ALT, SITE_URL } from "@/lib/seo/site";
 import { DEFAULT_HERO_BACKGROUND_PATH } from "@/lib/site-settings/defaults";
 import { loadSeoMetaSettings, parseSeoKeywords } from "@/lib/seo-meta/load";
+import { getVerificationMetaTags } from "@/lib/seo/verification";
 
-export async function getSiteMetadata(): Promise<Metadata> {
-  const settings = await loadSeoMetaSettings();
+export async function getSiteMetadata(siteName?: string): Promise<Metadata> {
+  const settings = await loadSeoMetaSettings(siteName);
   const siteUrl = settings.canonicalUrl || SITE_URL;
   const metadataBase = new URL(siteUrl);
 
@@ -33,6 +34,12 @@ export async function getSiteMetadata(): Promise<Metadata> {
     | "summary_large_image"
     | "app"
     | "player";
+
+  const verificationTags = getVerificationMetaTags(settings);
+  const otherMeta: Record<string, string> = {};
+  for (const tag of verificationTags) {
+    otherMeta[tag.name] = tag.content;
+  }
 
   return {
     metadataBase,
@@ -80,6 +87,7 @@ export async function getSiteMetadata(): Promise<Metadata> {
       images: [twitterImageUrl],
     },
     icons: Object.keys(icons).length > 0 ? icons : undefined,
+    other: Object.keys(otherMeta).length > 0 ? otherMeta : undefined,
     formatDetection: {
       email: false,
       address: false,

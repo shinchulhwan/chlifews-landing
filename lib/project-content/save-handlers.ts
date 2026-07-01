@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
-import { getCurrentSiteName } from "@/lib/project-content/site-name";
+import { getCurrentSiteNameAsync } from "@/lib/project-content/site-name";
 import {
   getFloorplanImagePath,
   getCommunityImagePath,
@@ -85,7 +85,7 @@ export async function executeSaveOverview(
 ): Promise<ProjectContentActionResult<ProjectOverview>> {
   console.log("[save:overview] Saving...");
 
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
   const sectionTitleRaw = formData.get("section_title");
   const descriptionRaw = formData.get("description");
   const sectionTitle =
@@ -147,7 +147,7 @@ export async function executeSavePremiumSection(
 ): Promise<ProjectContentActionResult<ProjectPremiumData>> {
   console.log("[save:premium-section] Saving...");
 
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
   const sectionTitle = String(formData.get("section_title") ?? "").trim();
   const sectionDescription = String(formData.get("section_description") ?? "").trim();
 
@@ -169,7 +169,7 @@ export async function executeSavePremiumCard(
 ): Promise<ProjectContentActionResult<ProjectPremiumData>> {
   console.log("[save:premium-card] Saving...");
 
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
   const cardId = String(formData.get("card_id") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -242,7 +242,7 @@ export async function executeSaveLocation(
 ): Promise<ProjectContentActionResult<ProjectLocation>> {
   console.log("[save:location] Saving...");
 
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
   const sectionTitle = String(formData.get("section_title") ?? "").trim();
   const points = parseJsonField<LocationPoint[]>(formData.get("points"), []);
   const existingImageUrl =
@@ -294,7 +294,7 @@ export async function executeUploadGallery(
 ): Promise<ProjectContentActionResult<ProjectGalleryItem[]>> {
   console.log("[save:gallery] Saving...");
 
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
   const files: (File | Blob)[] = [];
   for (const entry of formData.getAll("files")) {
     if (isUploadFile(entry)) {
@@ -353,7 +353,7 @@ export async function executeSaveFloorplan(
 ): Promise<ProjectContentActionResult<ProjectFloorplan[]>> {
   console.log("[save:floorplan] Saving...");
 
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
   const itemId = String(formData.get("item_id") ?? "").trim();
   const typeName = String(formData.get("type_name") ?? "").trim();
   const supplyArea = String(formData.get("supply_area") ?? "").trim();
@@ -419,7 +419,7 @@ export async function executeSaveFloorplan(
 export async function executeSaveCommunity(
   formData: FormData,
 ): Promise<ProjectContentActionResult<ProjectCommunityItem[]>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync(formData);
 
   const itemId = String(formData.get("item_id") ?? "").trim();
   const title = String(formData.get("title") ?? "");
@@ -486,7 +486,7 @@ export async function executeSaveCommunity(
 export async function executeDeleteCommunityItem(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectCommunityItem[]>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync();
   try {
     await deleteProjectCommunityItem(itemId, siteName);
     const data = await getProjectCommunity(siteName);
@@ -501,7 +501,7 @@ export async function executeDeleteCommunityItem(
 export async function executeReorderCommunity(
   orderedIds: string[],
 ): Promise<ProjectContentActionResult<ProjectCommunityItem[]>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync();
   try {
     await reorderProjectCommunity(siteName, orderedIds);
     const data = await getProjectCommunity(siteName);
@@ -516,7 +516,7 @@ export async function executeReorderCommunity(
 export async function executeDeletePremiumCard(
   cardId: string,
 ): Promise<ProjectContentActionResult<ProjectPremiumData>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync();
   try {
     await deleteProjectPremiumCard(cardId, siteName);
     const data = await getProjectPremium();
@@ -531,7 +531,7 @@ export async function executeReorderPremiumCards(
   orderedIds: string[],
 ): Promise<ProjectContentActionResult<ProjectPremiumData>> {
   try {
-    await reorderProjectPremiumCards(getCurrentSiteName(), orderedIds);
+    await reorderProjectPremiumCards(await getCurrentSiteNameAsync(), orderedIds);
     const data = await getProjectPremium();
     revalidateProjectContentPages();
     return { success: true, message: "순서가 변경되었습니다.", data };
@@ -543,7 +543,7 @@ export async function executeReorderPremiumCards(
 export async function executeDeleteGalleryItem(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectGalleryItem[]>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync();
   try {
     await deleteProjectGalleryItem(itemId, siteName);
     const data = await getProjectGallery();
@@ -557,7 +557,7 @@ export async function executeDeleteGalleryItem(
 export async function executeSetGalleryFeatured(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectGalleryItem[]>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync();
   try {
     await updateProjectGalleryItem(itemId, siteName, { is_featured: true });
     const data = await getProjectGallery();
@@ -572,7 +572,7 @@ export async function executeReorderGallery(
   orderedIds: string[],
 ): Promise<ProjectContentActionResult<ProjectGalleryItem[]>> {
   try {
-    await reorderProjectGallery(getCurrentSiteName(), orderedIds);
+    await reorderProjectGallery(await getCurrentSiteNameAsync(), orderedIds);
     const data = await getProjectGallery();
     revalidateProjectContentPages();
     return { success: true, message: "순서가 변경되었습니다.", data };
@@ -584,7 +584,7 @@ export async function executeReorderGallery(
 export async function executeDeleteFloorplan(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectFloorplan[]>> {
-  const siteName = getCurrentSiteName();
+  const siteName = await getCurrentSiteNameAsync();
   try {
     await deleteProjectFloorplan(itemId, siteName);
     const data = await getProjectFloorplans();
@@ -599,7 +599,7 @@ export async function executeReorderFloorplans(
   orderedIds: string[],
 ): Promise<ProjectContentActionResult<ProjectFloorplan[]>> {
   try {
-    await reorderProjectFloorplans(getCurrentSiteName(), orderedIds);
+    await reorderProjectFloorplans(await getCurrentSiteNameAsync(), orderedIds);
     const data = await getProjectFloorplans();
     revalidateProjectContentPages();
     return { success: true, message: "순서가 변경되었습니다.", data };

@@ -12,13 +12,57 @@ export type Database = {
       site_settings: {
         Row: SiteSetting;
         Insert: {
+          site_name?: string;
           key: string;
           value: string;
           updated_at?: string;
         };
         Update: {
+          site_name?: string;
           key?: string;
           value?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      projects: {
+        Row: {
+          id: string;
+          slug: string;
+          site_name: string;
+          storage_slug: string;
+          display_name: string;
+          domain: string | null;
+          is_published: boolean;
+          is_default: boolean;
+          cloned_from_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          site_name: string;
+          storage_slug: string;
+          display_name: string;
+          domain?: string | null;
+          is_published?: boolean;
+          is_default?: boolean;
+          cloned_from_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          site_name?: string;
+          storage_slug?: string;
+          display_name?: string;
+          domain?: string | null;
+          is_published?: boolean;
+          is_default?: boolean;
+          cloned_from_id?: string | null;
+          created_at?: string;
           updated_at?: string;
         };
         Relationships: [];

@@ -167,10 +167,14 @@ export async function executeSaveSiteSettingsSection(
     }
 
     console.log("[save:site-settings] DB save:", entries);
-    await setSiteSettingsBulk(entries);
+    const { resolveAdminSiteName } = await import("@/lib/admin/project-context");
+    const siteName = await resolveAdminSiteName(
+      String(formData.get("projectSlug") ?? "").trim() || undefined,
+    );
+    await setSiteSettingsBulk(entries, siteName);
 
     const allKeys = getSectionFieldKeys(sectionId);
-    const stored = await getSiteSettingsMap(allKeys);
+    const stored = await getSiteSettingsMap(allKeys, siteName);
     const bundle = mergeSiteSettings(stored);
     const data: Record<string, string> = {};
     for (const key of allKeys) {
@@ -188,6 +192,8 @@ export async function executeSaveSiteSettingsSection(
 }
 
 export async function getSiteSettingsForAdmin(): Promise<Record<string, string>> {
-  const stored = await getSiteSettingsMap(ALL_SITE_SETTING_KEYS);
+  const { resolveAdminSiteName } = await import("@/lib/admin/project-context");
+  const siteName = await resolveAdminSiteName();
+  const stored = await getSiteSettingsMap(ALL_SITE_SETTING_KEYS, siteName);
   return mergeSiteSettings(stored).values;
 }

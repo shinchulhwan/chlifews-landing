@@ -84,8 +84,8 @@ export function mergeSiteSettings(
   };
 }
 
-export async function loadSiteSettings(): Promise<SiteSettingsBundle> {
-  const stored = await getSiteSettingsMap(ALL_SITE_SETTING_KEYS);
+export async function loadSiteSettings(siteName?: string): Promise<SiteSettingsBundle> {
+  const stored = await getSiteSettingsMap(ALL_SITE_SETTING_KEYS, siteName);
   return mergeSiteSettings(stored);
 }
 

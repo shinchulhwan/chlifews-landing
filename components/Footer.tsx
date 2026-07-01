@@ -1,7 +1,7 @@
 import { loadSiteSettings } from "@/lib/site-settings/load";
 
-export default async function Footer() {
-  const settings = await loadSiteSettings();
+export default async function Footer({ siteName }: { siteName?: string }) {
+  const settings = await loadSiteSettings(siteName);
   const phone = settings.contactPhone.replace(/[^0-9]/g, "");
   const phoneTel = phone ? `tel:${phone}` : undefined;
 

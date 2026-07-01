@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import SiteAnalytics from "@/components/seo/SiteAnalytics";
-import { getSiteMetadata } from "@/lib/seo/metadata";
-import { getVerificationMetaTags } from "@/lib/seo/verification";
-import { loadSeoMetaSettings } from "@/lib/seo-meta/load";
+import { getDefaultProject, ensureDefaultProjectSeeded } from "@/lib/projects/storage";
 import { loadSiteSettings } from "@/lib/site-settings/load";
 import "./globals.css";
 
@@ -12,10 +10,6 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
 });
-
-export async function generateMetadata(): Promise<Metadata> {
-  return getSiteMetadata();
-}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -29,17 +23,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await loadSiteSettings();
-  const seo = await loadSeoMetaSettings();
-  const verificationTags = getVerificationMetaTags(seo);
+  await ensureDefaultProjectSeeded();
+  const project = await getDefaultProject();
+  const settings = await loadSiteSettings(project?.site_name);
 
   return (
     <html lang="ko" className={`${inter.variable} h-full antialiased`}>
-      <head>
-        {verificationTags.map((tag) => (
-          <meta key={tag.name} name={tag.name} content={tag.content} />
-        ))}
-      </head>
       <body className="min-h-full flex flex-col bg-white text-navy">
         {children}
         <SiteAnalytics

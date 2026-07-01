@@ -1,6 +1,6 @@
 import ContactForm from "@/components/ContactForm";
 
-export default function CTA() {
+export default function CTA({ siteName }: { siteName?: string }) {
   return (
     <section id="contact" className="bg-navy py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -18,7 +18,7 @@ export default function CTA() {
           </p>
         </div>
 
-        <ContactForm />
+        <ContactForm siteName={siteName} />
       </div>
     </section>
   );

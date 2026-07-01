@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  FolderKanban,
   ImageIcon,
   Images,
   Landmark,
@@ -17,6 +18,7 @@ import {
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "관심고객 관리", icon: Users },
+  { href: "/admin/projects", label: "프로젝트 관리", icon: FolderKanban },
   { href: "/admin/site-settings", label: "사이트 설정", icon: Settings },
   { href: "/admin/seo", label: "SEO / 메타태그 관리", icon: Search },
   { href: "/admin/hero-background", label: "메인 배경 관리", icon: ImageIcon },

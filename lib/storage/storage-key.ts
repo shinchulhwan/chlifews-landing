@@ -1,22 +1,27 @@
 import { createHash } from "crypto";
 import { getSiteNameFromEnv } from "@/lib/config/site";
-
-/** SITE_NAME → Storage slug (영문 소문자·숫자·하이픈만) */
-const KNOWN_SITE_SLUGS: Record<string, string> = {
-  "동암역 더트루엘 아파트 분양정보": "dongam-truel",
-};
+import { KNOWN_SITE_SLUGS } from "@/lib/projects/known-slugs";
 
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const STORAGE_KEY_PATTERN = /^[a-z0-9./-]+$/;
 
 /**
  * 프로젝트 Storage slug
- * 1. SITE_STORAGE_SLUG env
- * 2. KNOWN_SITE_SLUGS 매핑
- * 3. SITE_NAME에서 라틴 문자만 slugify
- * 4. 한글 등만 있으면 site-{hash}
+ * 1. storageSlugOverride (projects.storage_slug)
+ * 2. SITE_STORAGE_SLUG env
+ * 3. KNOWN_SITE_SLUGS 매핑
+ * 4. SITE_NAME에서 라틴 문자만 slugify
+ * 5. 한글 등만 있으면 site-{hash}
  */
-export function getProjectStorageSlug(siteName?: string): string {
+export function getProjectStorageSlug(
+  siteName?: string,
+  storageSlugOverride?: string,
+): string {
+  const override = storageSlugOverride?.trim().toLowerCase();
+  if (override && SLUG_PATTERN.test(override)) {
+    return override;
+  }
+
   const fromEnv = (process.env.SITE_STORAGE_SLUG ?? "").trim().toLowerCase();
   if (fromEnv && SLUG_PATTERN.test(fromEnv)) {
     return fromEnv;
@@ -93,8 +98,9 @@ export function buildProjectStoragePath(
   siteName: string | undefined,
   folder: string,
   fileName: string,
+  storageSlugOverride?: string,
 ): string {
-  const slug = getProjectStorageSlug(siteName);
+  const slug = getProjectStorageSlug(siteName, storageSlugOverride);
   const safeFolder = folder.toLowerCase().replace(/[^a-z0-9-]/g, "");
   const safeFile = sanitizeStorageFileName(fileName);
   return `projects/${slug}/${safeFolder}/${safeFile}`;

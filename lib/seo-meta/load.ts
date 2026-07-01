@@ -123,8 +123,8 @@ export function mergeSeoMetaSettings(
   };
 }
 
-export async function loadSeoMetaSettings(): Promise<SeoMetaBundle> {
-  const stored = await getSiteSettingsMap([...SEO_META_SETTING_KEYS]);
+export async function loadSeoMetaSettings(siteName?: string): Promise<SeoMetaBundle> {
+  const stored = await getSiteSettingsMap([...SEO_META_SETTING_KEYS], siteName);
   return mergeSeoMetaSettings(stored);
 }
 

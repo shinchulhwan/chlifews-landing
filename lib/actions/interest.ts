@@ -47,6 +47,7 @@ function logSupabaseError(context: string, error: PostgrestError): void {
 function toNotificationCustomer(
   data: CustomerInput,
   createdAt: string | null,
+  siteName: string,
 ): InterestCustomer {
   return {
     id: "",
@@ -55,7 +56,7 @@ function toNotificationCustomer(
     type: null,
     visit_date: null,
     memo: data.memo,
-    site_name: getSiteNameForInsert(),
+    site_name: siteName,
     status: "pending",
     created_at: createdAt ?? new Date().toISOString(),
   };
@@ -65,8 +66,8 @@ async function insertCustomer(
   supabase: SupabaseClient<Database>,
   input: CustomerInput,
   context: string,
+  siteName: string,
 ): Promise<SaveCustomerResult> {
-  const siteName = getSiteNameForInsert();
   const row = buildCustomerInsertRow(input, siteName);
 
   console.log(`[${context}] table:`, CUSTOMERS_TABLE);
@@ -112,7 +113,10 @@ async function insertCustomer(
   };
 }
 
-async function saveCustomer(input: CustomerInput): Promise<SaveCustomerResult> {
+async function saveCustomer(
+  input: CustomerInput,
+  siteName: string,
+): Promise<SaveCustomerResult> {
   if (!isSupabaseConfigured()) {
     const configError = {
       message:
@@ -131,6 +135,7 @@ async function saveCustomer(input: CustomerInput): Promise<SaveCustomerResult> {
     anonClient,
     input,
     "submitInterestCustomer:anon",
+    siteName,
   );
   if (anonResult.ok) {
     return anonResult;
@@ -142,6 +147,7 @@ async function saveCustomer(input: CustomerInput): Promise<SaveCustomerResult> {
       serviceClient,
       input,
       "submitInterestCustomer:service_role",
+      siteName,
     );
     if (serviceResult.ok) {
       return serviceResult;
@@ -189,9 +195,11 @@ export async function submitInterestCustomer(
   }
 
   const customerInput = validation.data;
+  const siteName =
+    String(formData.get("site_name") ?? "").trim() || getSiteNameForInsert();
 
   try {
-    const saveResult = await saveCustomer(customerInput);
+    const saveResult = await saveCustomer(customerInput, siteName);
 
     if (!saveResult.ok) {
       console.error("[submitInterestCustomer] insert failed:", saveResult.error);
@@ -243,6 +251,7 @@ export async function submitInterestCustomer(
     const notificationCustomer = toNotificationCustomer(
       customerInput,
       saveResult.created_at,
+      siteName,
     );
 
     try {

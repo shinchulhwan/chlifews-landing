@@ -160,7 +160,12 @@ export async function executeSaveSeoMetaField(
       value = normalizeVerificationCode(value);
     }
 
-    await setSiteSettingsBulk({ [key]: value });
+    const { resolveAdminSiteName } = await import("@/lib/admin/project-context");
+    const siteName = await resolveAdminSiteName(
+      String(formData.get("projectSlug") ?? "").trim() || undefined,
+    );
+
+    await setSiteSettingsBulk({ [key]: value }, siteName);
 
     const stored = await getSiteSettingsMap([key]);
     const bundle = mergeSeoMetaSettings(stored);
@@ -181,6 +186,8 @@ export async function executeSaveSeoMetaField(
 }
 
 export async function getSeoMetaForAdmin(): Promise<Record<string, string>> {
-  const stored = await getSiteSettingsMap([...SEO_META_SETTING_KEYS]);
+  const { resolveAdminSiteName } = await import("@/lib/admin/project-context");
+  const siteName = await resolveAdminSiteName();
+  const stored = await getSiteSettingsMap([...SEO_META_SETTING_KEYS], siteName);
   return mergeSeoMetaSettings(stored).values;
 }

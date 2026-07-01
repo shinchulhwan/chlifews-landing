@@ -32,7 +32,7 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export default function ContactForm() {
+export default function ContactForm({ siteName }: { siteName?: string }) {
   const [errors, setErrors] = useState<CustomerErrors>({});
   const [status, setStatus] = useState<{
     type: "idle" | "success" | "error";
@@ -112,6 +112,7 @@ export default function ContactForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {siteName && <input type="hidden" name="site_name" value={siteName} />}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block">
