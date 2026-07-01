@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { OG_IMAGE_ALT, SITE_URL } from "@/lib/seo/site";
 import { DEFAULT_HERO_BACKGROUND_PATH } from "@/lib/site-settings/defaults";
-import { loadSiteSettings, parseSeoKeywords } from "@/lib/site-settings/load";
+import { loadSeoMetaSettings, parseSeoKeywords } from "@/lib/seo-meta/load";
 
 export async function getSiteMetadata(): Promise<Metadata> {
-  const settings = await loadSiteSettings();
+  const settings = await loadSeoMetaSettings();
   const siteUrl = settings.canonicalUrl || SITE_URL;
   const metadataBase = new URL(siteUrl);
 
@@ -13,16 +13,26 @@ export async function getSiteMetadata(): Promise<Metadata> {
     ? ogImagePath
     : new URL(ogImagePath, metadataBase).toString();
 
+  const twitterImagePath = settings.twitterImage || ogImagePath;
+  const twitterImageUrl = twitterImagePath.startsWith("http")
+    ? twitterImagePath
+    : new URL(twitterImagePath, metadataBase).toString();
+
   const indexable = settings.robots !== "noindex";
 
   const verification: Metadata["verification"] = {};
+  const other: Record<string, string> = {};
   if (settings.googleVerification) {
     verification.google = settings.googleVerification;
   }
   if (settings.naverVerification) {
-    verification.other = {
-      "naver-site-verification": settings.naverVerification,
-    };
+    other["naver-site-verification"] = settings.naverVerification;
+  }
+  if (settings.bingVerification) {
+    other["msvalidate.01"] = settings.bingVerification;
+  }
+  if (Object.keys(other).length > 0) {
+    verification.other = other;
   }
 
   const icons: Metadata["icons"] = {};
@@ -33,15 +43,21 @@ export async function getSiteMetadata(): Promise<Metadata> {
     icons.apple = settings.appleIcon;
   }
 
+  const twitterCard = settings.twitterCard as
+    | "summary"
+    | "summary_large_image"
+    | "app"
+    | "player";
+
   return {
     metadataBase,
     applicationName: settings.siteName,
     title: {
-      default: settings.seoTitle || settings.browserTitle,
+      default: settings.metaTitle,
       template: `%s | ${settings.siteName}`,
     },
-    description: settings.seoDescription || settings.mainDescription,
-    keywords: parseSeoKeywords(settings.seoKeywords),
+    description: settings.metaDescription,
+    keywords: parseSeoKeywords(settings.metaKeywords),
     robots: {
       index: indexable,
       follow: indexable,
@@ -58,9 +74,9 @@ export async function getSiteMetadata(): Promise<Metadata> {
     },
     openGraph: {
       siteName: settings.siteName,
-      title: settings.ogTitle || settings.seoTitle,
-      description: settings.ogDescription || settings.seoDescription,
-      type: "website",
+      title: settings.ogTitle,
+      description: settings.ogDescription,
+      type: settings.ogType === "article" ? "article" : "website",
       locale: "ko_KR",
       url: settings.ogUrl || siteUrl,
       images: [
@@ -73,10 +89,10 @@ export async function getSiteMetadata(): Promise<Metadata> {
       ],
     },
     twitter: {
-      card: "summary_large_image",
-      title: settings.ogTitle || settings.seoTitle,
-      description: settings.ogDescription || settings.seoDescription,
-      images: [ogImageUrl],
+      card: twitterCard,
+      title: settings.twitterTitle,
+      description: settings.twitterDescription,
+      images: [twitterImageUrl],
     },
     verification: Object.keys(verification).length > 0 ? verification : undefined,
     icons: Object.keys(icons).length > 0 ? icons : undefined,

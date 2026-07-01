@@ -18,3 +18,7 @@ export function getFaviconPath(extension: string): string {
 export function getAppleIconPath(extension: string): string {
   return getSiteSettingsAssetPath(`apple-icon.${extension}`);
 }
+
+export function getTwitterImagePath(extension: string): string {
+  return getSiteSettingsAssetPath(`twitter-image.${extension}`);
+}
