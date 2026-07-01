@@ -20,21 +20,6 @@ export async function getSiteMetadata(): Promise<Metadata> {
 
   const indexable = settings.robots !== "noindex";
 
-  const verification: Metadata["verification"] = {};
-  const other: Record<string, string> = {};
-  if (settings.googleVerification) {
-    verification.google = settings.googleVerification;
-  }
-  if (settings.naverVerification) {
-    other["naver-site-verification"] = settings.naverVerification;
-  }
-  if (settings.bingVerification) {
-    other["msvalidate.01"] = settings.bingVerification;
-  }
-  if (Object.keys(other).length > 0) {
-    verification.other = other;
-  }
-
   const icons: Metadata["icons"] = {};
   if (settings.favicon) {
     icons.icon = settings.favicon;
@@ -94,7 +79,6 @@ export async function getSiteMetadata(): Promise<Metadata> {
       description: settings.twitterDescription,
       images: [twitterImageUrl],
     },
-    verification: Object.keys(verification).length > 0 ? verification : undefined,
     icons: Object.keys(icons).length > 0 ? icons : undefined,
     formatDetection: {
       email: false,

@@ -1,3 +1,4 @@
+import { normalizeVerificationCode } from "@/lib/seo/verification";
 import { SITE_SETTINGS_DEFAULTS } from "@/lib/site-settings/defaults";
 import {
   SEO_META_SETTING_KEYS,
@@ -104,9 +105,15 @@ export function mergeSeoMetaSettings(
     twitterDescription,
     twitterImage,
     twitterCard: pick(map, SITE_SETTING_KEYS.TWITTER_CARD) || "summary_large_image",
-    googleVerification: pick(map, SITE_SETTING_KEYS.GOOGLE_VERIFICATION),
-    naverVerification: pick(map, SITE_SETTING_KEYS.NAVER_VERIFICATION),
-    bingVerification: pick(map, SITE_SETTING_KEYS.BING_VERIFICATION),
+    googleVerification: normalizeVerificationCode(
+      pick(map, SITE_SETTING_KEYS.GOOGLE_VERIFICATION),
+    ),
+    naverVerification: normalizeVerificationCode(
+      pick(map, SITE_SETTING_KEYS.NAVER_VERIFICATION),
+    ),
+    bingVerification: normalizeVerificationCode(
+      pick(map, SITE_SETTING_KEYS.BING_VERIFICATION),
+    ),
     ga4Id: pick(map, SITE_SETTING_KEYS.GA4_ID),
     gtmId: pick(map, SITE_SETTING_KEYS.GTM_ID),
     metaPixel: pick(map, SITE_SETTING_KEYS.META_PIXEL),

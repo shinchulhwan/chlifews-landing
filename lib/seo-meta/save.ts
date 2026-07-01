@@ -18,6 +18,7 @@ import {
 } from "@/lib/site-settings/keys";
 import { SEO_META_FILE_KEYS } from "@/lib/seo-meta/fields";
 import { mergeSeoMetaSettings } from "@/lib/seo-meta/load";
+import { normalizeVerificationCode } from "@/lib/seo/verification";
 import {
   buildPublicStorageUrl,
   normalizeImageExtension,
@@ -99,6 +100,12 @@ async function uploadSiteAsset(
   return publicUrl;
 }
 
+const VERIFICATION_KEYS = new Set<string>([
+  SITE_SETTING_KEYS.GOOGLE_VERIFICATION,
+  SITE_SETTING_KEYS.NAVER_VERIFICATION,
+  SITE_SETTING_KEYS.BING_VERIFICATION,
+]);
+
 export async function executeSaveSeoMetaField(
   key: string,
   formData: FormData,
@@ -147,6 +154,10 @@ export async function executeSaveSeoMetaField(
         return { success: false, message: "저장할 값이 없습니다." };
       }
       value = raw;
+    }
+
+    if (VERIFICATION_KEYS.has(key)) {
+      value = normalizeVerificationCode(value);
     }
 
     await setSiteSettingsBulk({ [key]: value });

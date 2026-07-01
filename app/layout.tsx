@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import SiteAnalytics from "@/components/seo/SiteAnalytics";
 import { getSiteMetadata } from "@/lib/seo/metadata";
+import { getVerificationMetaTags } from "@/lib/seo/verification";
+import { loadSeoMetaSettings } from "@/lib/seo-meta/load";
 import { loadSiteSettings } from "@/lib/site-settings/load";
 import "./globals.css";
 
@@ -28,9 +30,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await loadSiteSettings();
+  const seo = await loadSeoMetaSettings();
+  const verificationTags = getVerificationMetaTags(seo);
 
   return (
     <html lang="ko" className={`${inter.variable} h-full antialiased`}>
+      <head>
+        {verificationTags.map((tag) => (
+          <meta key={tag.name} name={tag.name} content={tag.content} />
+        ))}
+      </head>
       <body className="min-h-full flex flex-col bg-white text-navy">
         {children}
         <SiteAnalytics

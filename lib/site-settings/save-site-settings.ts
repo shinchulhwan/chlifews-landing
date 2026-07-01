@@ -17,6 +17,7 @@ import {
   type SiteSettingsSectionId,
 } from "@/lib/site-settings/fields";
 import { mergeSiteSettings } from "@/lib/site-settings/load";
+import { normalizeVerificationCode } from "@/lib/seo/verification";
 import {
   buildPublicStorageUrl,
   normalizeImageExtension,
@@ -99,6 +100,12 @@ async function uploadSiteAsset(
   return publicUrl;
 }
 
+const VERIFICATION_KEYS = new Set<string>([
+  SITE_SETTING_KEYS.GOOGLE_VERIFICATION,
+  SITE_SETTING_KEYS.NAVER_VERIFICATION,
+  SITE_SETTING_KEYS.BING_VERIFICATION,
+]);
+
 export async function executeSaveSiteSettingsSection(
   sectionId: SiteSettingsSectionId,
   formData: FormData,
@@ -150,6 +157,12 @@ export async function executeSaveSiteSettingsSection(
         entries[key] = await uploadSiteAsset(file, pathFn(ext), getUploadFileName(file));
       } else if (existing) {
         entries[key] = existing;
+      }
+    }
+
+    for (const key of Object.keys(entries)) {
+      if (VERIFICATION_KEYS.has(key)) {
+        entries[key] = normalizeVerificationCode(entries[key]);
       }
     }
 
