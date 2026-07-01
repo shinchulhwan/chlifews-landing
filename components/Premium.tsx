@@ -5,6 +5,10 @@ import { useMemo } from "react";
 import { LightboxTrigger } from "@/components/lightbox";
 import type { LightboxItem } from "@/lib/lightbox/types";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { useLiveProjectContent } from "@/lib/project-content/use-live-content";
 import type { ProjectPremiumData } from "@/lib/types/project-content";
 
@@ -23,9 +27,13 @@ export default function Premium({ initialData }: PremiumProps) {
     const lb: LightboxItem[] = [];
     const map = new Map<string, number>();
     cards.forEach((card) => {
-      if (card.image_url) {
+      const src = withImageCacheBust(
+        card.image_url,
+        cacheBustFromUpdatedAt(card.updated_at),
+      );
+      if (src) {
         map.set(card.id, lb.length);
-        lb.push({ src: card.image_url, alt: card.title || "프리미엄" });
+        lb.push({ src, alt: card.title || "프리미엄" });
       }
     });
     return { lightboxItems: lb, imageIndexById: map };
@@ -49,22 +57,27 @@ export default function Premium({ initialData }: PremiumProps) {
             </div>
             {cards.length > 0 && (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {cards.map((card) => (
+                {cards.map((card) => {
+                  const cardImage = withImageCacheBust(
+                    card.image_url,
+                    cacheBustFromUpdatedAt(card.updated_at),
+                  );
+                  return (
                   <article
                     key={card.id}
                     className="overflow-hidden rounded-2xl border border-navy/10 bg-light-gray/40"
                   >
-                    {card.image_url && (
+                    {cardImage && (
                       <LightboxTrigger
                         items={lightboxItems}
                         index={imageIndexById.get(card.id) ?? 0}
                         className="relative aspect-[4/3] bg-navy/5"
                       >
                         <Image
-                          src={card.image_url}
+                          src={cardImage}
                           alt={card.title}
                           fill
-                          unoptimized={isLightboxExternalUrl(card.image_url)}
+                          unoptimized={isLightboxExternalUrl(cardImage)}
                           className="object-cover"
                           sizes="(max-width: 768px) 100vw, 33vw"
                         />
@@ -79,7 +92,8 @@ export default function Premium({ initialData }: PremiumProps) {
                       )}
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>

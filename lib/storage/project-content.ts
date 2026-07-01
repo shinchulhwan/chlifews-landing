@@ -109,12 +109,14 @@ export async function uploadProjectImage(
 
   const safePath = sanitizeStorageKey(objectPath);
 
+  console.log("[project-content:storage-upload] path:", safePath);
+
   const { error } = await supabase.storage
     .from(SITE_ASSETS_BUCKET)
     .upload(safePath, buffer, {
       upsert: true,
       contentType,
-      cacheControl: "3600",
+      cacheControl: "60",
     });
 
   if (error) {
@@ -122,7 +124,9 @@ export async function uploadProjectImage(
     throw new Error(`Storage 업로드 실패: ${error.message}`);
   }
 
-  return buildPublicStorageUrl(supabaseUrl, safePath);
+  const publicUrl = buildPublicStorageUrl(supabaseUrl, safePath);
+  console.log("[project-content:storage-upload] imageUrl:", publicUrl);
+  return publicUrl;
 }
 
 // ─── Overview ───────────────────────────────────────────────
@@ -164,6 +168,8 @@ export async function upsertProjectOverview(
     info_cards: input.info_cards,
     updated_at: new Date().toISOString(),
   };
+
+  console.log("[project_overview:upsert] image_url:", payload.image_url, "site_name:", payload.site_name);
 
   const { data, error } = await supabase
     .from("project_overview")
@@ -288,6 +294,7 @@ export async function upsertProjectPremiumSection(
       .from("project_premium")
       .update(payload)
       .eq("id", existing.id)
+      .eq("site_name", siteName)
       .select("*")
       .single();
 
@@ -336,6 +343,7 @@ export async function insertProjectPremiumCard(
 
 export async function updateProjectPremiumCard(
   id: string,
+  siteName: string,
   input: Partial<{
     title: string;
     description: string;
@@ -348,6 +356,7 @@ export async function updateProjectPremiumCard(
     .from("project_premium")
     .update({ ...input, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("site_name", siteName)
     .eq("record_kind", "card")
     .select("*")
     .single();
@@ -356,12 +365,16 @@ export async function updateProjectPremiumCard(
   return mapPremiumCard(data);
 }
 
-export async function deleteProjectPremiumCard(id: string): Promise<void> {
+export async function deleteProjectPremiumCard(
+  id: string,
+  siteName = getCurrentSiteName(),
+): Promise<void> {
   const supabase = getWriteClient();
   const { error } = await supabase
     .from("project_premium")
     .delete()
     .eq("id", id)
+    .eq("site_name", siteName)
     .eq("record_kind", "card");
 
   if (error) throw error;
@@ -424,6 +437,8 @@ export async function upsertProjectLocation(
     points: input.points,
     updated_at: new Date().toISOString(),
   };
+
+  console.log("[project_location:upsert] main_image_url:", payload.main_image_url, "site_name:", payload.site_name);
 
   const { data, error } = await supabase
     .from("project_location")
@@ -502,29 +517,23 @@ export async function insertProjectGalleryItem(
 
 export async function updateProjectGalleryItem(
   id: string,
+  siteName: string,
   input: Partial<{ title: string; sort_order: number; is_featured: boolean }>,
 ): Promise<ProjectGalleryItem> {
   const supabase = getWriteClient();
 
   if (input.is_featured) {
-    const { data: row } = await supabase
+    await supabase
       .from("project_gallery")
-      .select("site_name")
-      .eq("id", id)
-      .single();
-
-    if (row?.site_name) {
-      await supabase
-        .from("project_gallery")
-        .update({ is_featured: false, updated_at: new Date().toISOString() })
-        .eq("site_name", row.site_name);
-    }
+      .update({ is_featured: false, updated_at: new Date().toISOString() })
+      .eq("site_name", siteName);
   }
 
   const { data, error } = await supabase
     .from("project_gallery")
     .update({ ...input, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("site_name", siteName)
     .select("*")
     .single();
 
@@ -532,9 +541,16 @@ export async function updateProjectGalleryItem(
   return mapGalleryItem(data);
 }
 
-export async function deleteProjectGalleryItem(id: string): Promise<void> {
+export async function deleteProjectGalleryItem(
+  id: string,
+  siteName = getCurrentSiteName(),
+): Promise<void> {
   const supabase = getWriteClient();
-  const { error } = await supabase.from("project_gallery").delete().eq("id", id);
+  const { error } = await supabase
+    .from("project_gallery")
+    .delete()
+    .eq("id", id)
+    .eq("site_name", siteName);
   if (error) throw error;
 }
 
@@ -618,6 +634,7 @@ export async function insertProjectFloorplan(
 
 export async function updateProjectFloorplan(
   id: string,
+  siteName: string,
   input: Partial<{
     type_name: string;
     supply_area: string;
@@ -632,6 +649,7 @@ export async function updateProjectFloorplan(
     .from("project_floorplans")
     .update({ ...input, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("site_name", siteName)
     .select("*")
     .single();
 
@@ -639,9 +657,16 @@ export async function updateProjectFloorplan(
   return mapFloorplan(data);
 }
 
-export async function deleteProjectFloorplan(id: string): Promise<void> {
+export async function deleteProjectFloorplan(
+  id: string,
+  siteName = getCurrentSiteName(),
+): Promise<void> {
   const supabase = getWriteClient();
-  const { error } = await supabase.from("project_floorplans").delete().eq("id", id);
+  const { error } = await supabase
+    .from("project_floorplans")
+    .delete()
+    .eq("id", id)
+    .eq("site_name", siteName);
   if (error) throw error;
 }
 
@@ -726,6 +751,7 @@ export async function insertProjectCommunityItem(
 
 export async function updateProjectCommunityItem(
   id: string,
+  siteName: string,
   input: Partial<{
     title: string;
     subtitle: string;
@@ -739,6 +765,7 @@ export async function updateProjectCommunityItem(
     .from("project_community")
     .update({ ...input, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("site_name", siteName)
     .select("*")
     .single();
 
@@ -749,9 +776,16 @@ export async function updateProjectCommunityItem(
   return mapCommunityItem(data);
 }
 
-export async function deleteProjectCommunityItem(id: string): Promise<void> {
+export async function deleteProjectCommunityItem(
+  id: string,
+  siteName = getCurrentSiteName(),
+): Promise<void> {
   const supabase = getWriteClient();
-  const { error } = await supabase.from("project_community").delete().eq("id", id);
+  const { error } = await supabase
+    .from("project_community")
+    .delete()
+    .eq("id", id)
+    .eq("site_name", siteName);
   if (error) throw error;
 }
 

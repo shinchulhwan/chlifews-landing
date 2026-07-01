@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ImageIcon, Loader2, LogOut, Upload } from "lucide-react";
 import { adminLogout } from "@/lib/actions/admin";
 import { getHeroBackgroundSettingAction } from "@/lib/actions/site-settings-admin";
-import { applySaveResult } from "@/lib/admin/save-client";
+import { applySaveResult, postAdminHeroBackgroundSave } from "@/lib/admin/save-client";
 import { SITE_SETTING_KEYS } from "@/lib/site-settings/keys";
 import {
   broadcastSiteSetting,
@@ -90,20 +90,7 @@ export default function HeroBackgroundManager({
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      console.log("Saving...");
-      const response = await fetch("/api/admin/hero-background", {
-        method: "POST",
-        body: formData,
-        credentials: "same-origin",
-      });
-
-      const result = (await response.json()) as {
-        success: boolean;
-        message: string;
-        data?: { backgroundUrl: string; publicUrl: string };
-      };
-
-      console.log("[HeroBackgroundManager] API response:", result);
+      const result = await postAdminHeroBackgroundSave(formData);
 
       if (applySaveResult(result, setToast) && result.data) {
         const newUrl = result.data.backgroundUrl;
@@ -222,7 +209,7 @@ export default function HeroBackgroundManager({
                 클릭하여 이미지 선택
               </span>
               <span className="text-xs text-navy/50">
-                JPG, PNG, WEBP · 최대 10MB
+                JPG, PNG, WEBP · 최대 4MB
               </span>
               <input
                 ref={fileInputRef}

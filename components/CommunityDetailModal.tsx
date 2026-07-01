@@ -5,6 +5,10 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import type { ProjectCommunityItem } from "@/lib/types/project-content";
 
 type CommunityDetailModalProps = {
@@ -40,6 +44,11 @@ export default function CommunityDetailModal({
 
   if (!mounted || !item) return null;
 
+  const itemImage = withImageCacheBust(
+    item.image_url,
+    cacheBustFromUpdatedAt(item.updated_at),
+  );
+
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
@@ -61,13 +70,13 @@ export default function CommunityDetailModal({
           <X size={20} />
         </button>
 
-        {item.image_url && (
+        {itemImage && (
           <div className="relative aspect-[16/10] w-full bg-navy/5">
             <Image
-              src={item.image_url}
+              src={itemImage}
               alt={item.title}
               fill
-              unoptimized={isLightboxExternalUrl(item.image_url)}
+              unoptimized={isLightboxExternalUrl(itemImage)}
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 672px"
               priority

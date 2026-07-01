@@ -9,12 +9,14 @@ import {
   Landmark,
   LayoutGrid,
   MapPin,
+  Settings,
   Sparkles,
   Users,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "관심고객 관리", icon: Users },
+  { href: "/admin/site-settings", label: "사이트 설정", icon: Settings },
   { href: "/admin/hero-background", label: "메인 배경 관리", icon: ImageIcon },
   { href: "/admin/overview", label: "사업개요", icon: Building2 },
   { href: "/admin/premium", label: "프리미엄", icon: Sparkles },

@@ -55,21 +55,59 @@ export async function setSiteSetting(
   key: SiteSettingKey | string,
   value: string,
 ): Promise<void> {
-  const supabase = getWriteClient();
+  await setSiteSettingsBulk({ [key]: value });
+}
 
-  const { error } = await supabase.from("site_settings").upsert(
-    {
-      key,
-      value,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "key" },
-  );
+export async function setSiteSettingsBulk(
+  entries: Record<string, string>,
+): Promise<void> {
+  const supabase = getWriteClient();
+  const now = new Date().toISOString();
+  const rows = Object.entries(entries).map(([key, value]) => ({
+    key,
+    value,
+    updated_at: now,
+  }));
+
+  if (rows.length === 0) return;
+
+  const { error } = await supabase.from("site_settings").upsert(rows, {
+    onConflict: "key",
+  });
 
   if (error) {
-    logSupabaseError("site_settings:upsert", error);
+    logSupabaseError("site_settings:upsert-bulk", error);
     throw error;
   }
+}
+
+export async function getSiteSettingsMap(
+  keys: string[],
+): Promise<Record<string, string>> {
+  const supabase = getReadClient();
+  const result: Record<string, string> = {};
+
+  if (!supabase || keys.length === 0) {
+    return result;
+  }
+
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("key, value")
+    .in("key", keys);
+
+  if (error) {
+    logSupabaseError("site_settings:select-bulk", error);
+    return result;
+  }
+
+  for (const row of data ?? []) {
+    if (row.value?.trim()) {
+      result[row.key] = row.value.trim();
+    }
+  }
+
+  return result;
 }
 
 export async function getSiteSettingRow(
@@ -95,8 +133,24 @@ export async function getSiteSettingRow(
   return data ?? null;
 }
 
-export async function getHeroBackgroundUrl(): Promise<string> {
+export async function getHeroBackgroundUrl(): Promise<string | null> {
   const value = await getSiteSetting(SITE_SETTING_KEYS.HERO_BACKGROUND);
+  return value;
+}
+
+export async function getHeroBackgroundSetting(): Promise<{
+  url: string;
+  updated_at: string;
+} | null> {
+  const row = await getSiteSettingRow(SITE_SETTING_KEYS.HERO_BACKGROUND);
+  const url = row?.value?.trim();
+  if (!url || !row) return null;
+  return { url, updated_at: row.updated_at };
+}
+
+/** 관리자 미리보기용 — DB 값 없을 때만 로컬 placeholder */
+export async function getHeroBackgroundUrlForAdmin(): Promise<string> {
+  const value = await getHeroBackgroundUrl();
   return value ?? DEFAULT_HERO_BACKGROUND_PATH;
 }
 

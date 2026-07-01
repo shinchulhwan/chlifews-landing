@@ -7,7 +7,7 @@ const KNOWN_SITE_SLUGS: Record<string, string> = {
 };
 
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
-const STORAGE_KEY_PATTERN = /^[a-z0-9-/]+$/;
+const STORAGE_KEY_PATTERN = /^[a-z0-9./-]+$/;
 
 /**
  * 프로젝트 Storage slug
@@ -49,20 +49,21 @@ export function getProjectStorageSlug(siteName?: string): string {
   return `site-${hash}`;
 }
 
-/** Storage object key — a-z, 0-9, -, / 만 허용 */
+/** Storage object key — a-z, 0-9, -, /, . 만 허용 */
 export function sanitizeStorageKey(key: string): string {
-  const sanitized = key
+  const segments = key
     .trim()
     .toLowerCase()
     .split("/")
     .map((segment) =>
       segment
-        .replace(/[^a-z0-9-]/g, "")
+        .replace(/[^a-z0-9.-]/g, "")
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, ""),
     )
-    .filter(Boolean)
-    .join("/");
+    .filter(Boolean);
+
+  const sanitized = segments.join("/");
 
   if (!sanitized || !STORAGE_KEY_PATTERN.test(sanitized)) {
     throw new Error(`Invalid storage key after sanitize: ${key}`);
@@ -96,5 +97,5 @@ export function buildProjectStoragePath(
   const slug = getProjectStorageSlug(siteName);
   const safeFolder = folder.toLowerCase().replace(/[^a-z0-9-]/g, "");
   const safeFile = sanitizeStorageFileName(fileName);
-  return sanitizeStorageKey(`projects/${slug}/${safeFolder}/${safeFile}`);
+  return `projects/${slug}/${safeFolder}/${safeFile}`;
 }

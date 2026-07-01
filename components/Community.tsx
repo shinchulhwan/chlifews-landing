@@ -4,6 +4,10 @@ import Image from "next/image";
 import { useState } from "react";
 import CommunityDetailModal from "@/components/CommunityDetailModal";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { useLiveProjectContent } from "@/lib/project-content/use-live-content";
 import type { ProjectCommunityItem } from "@/lib/types/project-content";
 
@@ -31,7 +35,12 @@ export default function Community({ initialItems }: CommunityProps) {
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((item) => (
+              {items.map((item) => {
+                const itemImage = withImageCacheBust(
+                  item.image_url,
+                  cacheBustFromUpdatedAt(item.updated_at),
+                );
+                return (
                 <button
                   key={item.id}
                   type="button"
@@ -39,12 +48,12 @@ export default function Community({ initialItems }: CommunityProps) {
                   className="group overflow-hidden rounded-2xl border border-navy/10 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-gold/30 hover:shadow-lg"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-navy/5">
-                    {item.image_url ? (
+                    {itemImage ? (
                       <Image
-                        src={item.image_url}
+                        src={itemImage}
                         alt={item.title}
                         fill
-                        unoptimized={isLightboxExternalUrl(item.image_url)}
+                        unoptimized={isLightboxExternalUrl(itemImage)}
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
@@ -63,7 +72,8 @@ export default function Community({ initialItems }: CommunityProps) {
                     )}
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

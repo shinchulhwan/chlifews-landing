@@ -5,6 +5,10 @@ import { useMemo } from "react";
 import { LightboxTrigger } from "@/components/lightbox";
 import type { LightboxItem } from "@/lib/lightbox/types";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { useLiveProjectContent } from "@/lib/project-content/use-live-content";
 import type { ProjectGalleryItem } from "@/lib/types/project-content";
 
@@ -22,10 +26,18 @@ export default function Gallery({ initialItems }: GalleryProps) {
     const restItems = items.filter((item) => item.id !== featuredItem?.id);
     const ordered = featuredItem ? [featuredItem, ...restItems] : restItems;
     return ordered.map((item) => ({
-      src: item.image_url,
+      src:
+        withImageCacheBust(
+          item.image_url,
+          cacheBustFromUpdatedAt(item.updated_at),
+        ) ?? item.image_url,
       alt: item.title || "갤러리 이미지",
     }));
   }, [items]);
+
+  const displayUrl = (item: ProjectGalleryItem) =>
+    withImageCacheBust(item.image_url, cacheBustFromUpdatedAt(item.updated_at)) ??
+    item.image_url;
 
   return (
     <section id="gallery" className="bg-white py-20">
@@ -43,10 +55,10 @@ export default function Gallery({ initialItems }: GalleryProps) {
                 className="relative mb-6 block aspect-[21/9] overflow-hidden rounded-2xl bg-light-gray"
               >
                 <Image
-                  src={featured.image_url}
+                  src={displayUrl(featured)}
                   alt={featured.title || "대표 이미지"}
                   fill
-                  unoptimized={isLightboxExternalUrl(featured.image_url)}
+                  unoptimized={isLightboxExternalUrl(displayUrl(featured))}
                   className="object-cover"
                   sizes="100vw"
                   priority
@@ -63,10 +75,10 @@ export default function Gallery({ initialItems }: GalleryProps) {
                     className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-light-gray"
                   >
                     <Image
-                      src={item.image_url}
+                      src={displayUrl(item)}
                       alt={item.title || "갤러리 이미지"}
                       fill
-                      unoptimized={isLightboxExternalUrl(item.image_url)}
+                      unoptimized={isLightboxExternalUrl(displayUrl(item))}
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />

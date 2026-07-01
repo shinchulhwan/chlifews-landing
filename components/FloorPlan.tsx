@@ -5,6 +5,10 @@ import { useMemo } from "react";
 import { LightboxTrigger } from "@/components/lightbox";
 import type { LightboxItem } from "@/lib/lightbox/types";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { useLiveProjectContent } from "@/lib/project-content/use-live-content";
 import type { ProjectFloorplan } from "@/lib/types/project-content";
 
@@ -19,9 +23,13 @@ export default function FloorPlan({ initialItems }: FloorPlanProps) {
     const lb: LightboxItem[] = [];
     const map = new Map<string, number>();
     items.forEach((item) => {
-      if (item.image_url) {
+      const src = withImageCacheBust(
+        item.image_url,
+        cacheBustFromUpdatedAt(item.updated_at),
+      );
+      if (src) {
         map.set(item.id, lb.length);
-        lb.push({ src: item.image_url, alt: item.type_name || "평면도" });
+        lb.push({ src, alt: item.type_name || "평면도" });
       }
     });
     return { lightboxItems: lb, imageIndexById: map };
@@ -37,22 +45,27 @@ export default function FloorPlan({ initialItems }: FloorPlanProps) {
           <>
             <h3 className="mb-10 text-center text-2xl font-bold text-navy sm:text-3xl">평면도</h3>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {items.map((item) => (
+              {items.map((item) => {
+                const itemImage = withImageCacheBust(
+                  item.image_url,
+                  cacheBustFromUpdatedAt(item.updated_at),
+                );
+                return (
                 <article
                   key={item.id}
                   className="overflow-hidden rounded-2xl border border-navy/10 bg-white"
                 >
-                  {item.image_url && (
+                  {itemImage && (
                     <LightboxTrigger
                       items={lightboxItems}
                       index={imageIndexById.get(item.id) ?? 0}
                       className="relative block aspect-[4/3] bg-light-gray"
                     >
                       <Image
-                        src={item.image_url}
+                        src={itemImage}
                         alt={item.type_name}
                         fill
-                        unoptimized={isLightboxExternalUrl(item.image_url)}
+                        unoptimized={isLightboxExternalUrl(itemImage)}
                         className="object-contain p-4"
                         sizes="(max-width: 768px) 100vw, 33vw"
                       />
@@ -71,7 +84,8 @@ export default function FloorPlan({ initialItems }: FloorPlanProps) {
                     )}
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

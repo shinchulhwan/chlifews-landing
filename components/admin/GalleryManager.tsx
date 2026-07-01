@@ -139,7 +139,7 @@ export default function GalleryManager({ initialItems }: GalleryManagerProps) {
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-navy/15 bg-light-gray/60 px-6 py-10 transition-colors hover:border-gold/40">
           <Upload className="mb-3 text-navy/40" size={32} />
           <span className="mb-1 text-sm font-medium text-navy">클릭하여 이미지 선택 (여러 장 가능)</span>
-          <span className="text-xs text-navy/50">JPG, PNG, WEBP · 최대 10MB</span>
+          <span className="text-xs text-navy/50">JPG, PNG, WEBP · 최대 4MB</span>
           <input
             ref={fileInputRef}
             type="file"

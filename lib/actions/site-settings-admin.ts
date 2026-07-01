@@ -7,6 +7,7 @@ import { getSupabaseEnv } from "@/lib/supabase/env";
 import { tryCreateServiceRoleClient } from "@/lib/supabase/admin";
 import {
   getHeroBackgroundUrl,
+  getHeroBackgroundUrlForAdmin,
   getSiteSettingRow,
   setSiteSetting,
 } from "@/lib/storage/site-settings";
@@ -50,7 +51,7 @@ export async function getHeroBackgroundSettingAction(): Promise<
 
   try {
     const [backgroundUrl, setting] = await Promise.all([
-      getHeroBackgroundUrl(),
+      getHeroBackgroundUrlForAdmin(),
       getSiteSettingRow(SITE_SETTING_KEYS.HERO_BACKGROUND),
     ]);
 
@@ -176,7 +177,8 @@ export async function uploadHeroBackgroundAction(
 
 export async function getPublicHeroBackgroundUrl(): Promise<string> {
   try {
-    return await getHeroBackgroundUrl();
+    const url = await getHeroBackgroundUrl();
+    return url ?? DEFAULT_HERO_BACKGROUND_PATH;
   } catch {
     return DEFAULT_HERO_BACKGROUND_PATH;
   }

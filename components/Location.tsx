@@ -6,6 +6,10 @@ import { LightboxTrigger } from "@/components/lightbox";
 import { resolveLocationIcon } from "@/lib/project-content/icons";
 import type { LightboxItem } from "@/lib/lightbox/types";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { useLiveProjectContent } from "@/lib/project-content/use-live-content";
 import type { ProjectLocation } from "@/lib/types/project-content";
 
@@ -16,7 +20,10 @@ type LocationProps = {
 export default function Location({ initialData }: LocationProps) {
   const data = useLiveProjectContent<ProjectLocation | null>("location", initialData);
   const sectionTitle = data?.section_title ?? "입지환경";
-  const mainImageUrl = data?.main_image_url;
+  const mainImageUrl = withImageCacheBust(
+    data?.main_image_url,
+    cacheBustFromUpdatedAt(data?.updated_at),
+  );
   const points = data?.points ?? [];
   const hasContent = Boolean(mainImageUrl) || points.length > 0;
 

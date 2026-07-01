@@ -200,7 +200,7 @@ async function main(): Promise<void> {
       .from("project_premium")
       .insert({
         id: probeId,
-        site_name: siteName,
+        site_name: PROBE_SITE_NAME,
         record_kind: "section",
         sort_order: -1,
         title: "__probe__",
@@ -211,7 +211,11 @@ async function main(): Promise<void> {
 
     if (error) return { ok: false, op: "INSERT project_premium", error: error.message };
 
-    await supabase.from("project_premium").delete().eq("id", probeId);
+    await supabase
+      .from("project_premium")
+      .delete()
+      .eq("id", probeId)
+      .eq("site_name", PROBE_SITE_NAME);
     return { ok: true, op: "INSERT project_premium", id: data?.id };
   }
 

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth/admin";
+import {
+  getCmsEnvErrorResponse,
+  logApiRouteError,
+} from "@/lib/admin/api-route-utils";
 import { executeUploadHeroBackground } from "@/lib/site-settings/save-handlers";
 
 export async function POST(request: Request) {
@@ -10,15 +14,20 @@ export async function POST(request: Request) {
     );
   }
 
+  const envError = getCmsEnvErrorResponse();
+  if (envError) {
+    return envError;
+  }
+
   try {
     const formData = await request.formData();
     console.log("[api/admin/hero-background] POST");
     const result = await executeUploadHeroBackground(formData);
     return NextResponse.json(result, { status: result.success ? 200 : 400 });
   } catch (error) {
+    logApiRouteError("api/admin/hero-background", error);
     const message =
       error instanceof Error ? error.message : "저장 중 알 수 없는 오류가 발생했습니다.";
-    console.error("[api/admin/hero-background] Unhandled error:", error);
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

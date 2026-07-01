@@ -106,7 +106,7 @@ export async function executeSaveOverview(
 
     if (isUploadFile(imageFile)) {
       if (imageFile.size > MAX_FILE_SIZE) {
-        return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+        return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
       }
       const ext = normalizeImageExtension(getUploadFileName(imageFile));
       if (!ext) {
@@ -119,7 +119,10 @@ export async function executeSaveOverview(
         imageFile,
         getOverviewImagePath(siteName, ext),
       );
+      console.log("[save:overview] imageUrl:", imageUrl);
     }
+
+    console.log("[save:overview] DB save image_url:", imageUrl);
 
     const data = await upsertProjectOverview({
       site_name: siteName,
@@ -180,7 +183,7 @@ export async function executeSavePremiumCard(
 
     if (isUploadFile(imageFile)) {
       if (imageFile.size > MAX_FILE_SIZE) {
-        return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+        return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
       }
       const ext = normalizeImageExtension(getUploadFileName(imageFile));
       if (!ext) {
@@ -196,7 +199,7 @@ export async function executeSavePremiumCard(
       );
 
       if (cardId) {
-        await updateProjectPremiumCard(cardId, {
+        await updateProjectPremiumCard(cardId, siteName, {
           title,
           description,
           image_url: imageUrl,
@@ -211,7 +214,7 @@ export async function executeSavePremiumCard(
         });
       }
     } else if (cardId) {
-      await updateProjectPremiumCard(cardId, { title, description });
+      await updateProjectPremiumCard(cardId, siteName, { title, description });
     } else {
       const id = randomUUID();
       await insertProjectPremiumCard(siteName, {
@@ -251,7 +254,7 @@ export async function executeSaveLocation(
 
     if (isUploadFile(imageFile)) {
       if (imageFile.size > MAX_FILE_SIZE) {
-        return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+        return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
       }
       const ext = normalizeImageExtension(getUploadFileName(imageFile));
       if (!ext) {
@@ -264,7 +267,10 @@ export async function executeSaveLocation(
         imageFile,
         getLocationMainImagePath(siteName, ext),
       );
+      console.log("[save:location] imageUrl:", mainImageUrl);
     }
+
+    console.log("[save:location] DB save main_image_url:", mainImageUrl);
 
     const data = await upsertProjectLocation({
       site_name: siteName,
@@ -305,7 +311,7 @@ export async function executeUploadGallery(
   try {
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+        return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
       }
       const ext = normalizeImageExtension(getUploadFileName(file));
       if (!ext) {
@@ -363,7 +369,7 @@ export async function executeSaveFloorplan(
 
     if (isUploadFile(imageFile)) {
       if (imageFile.size > MAX_FILE_SIZE) {
-        return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+        return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
       }
       const ext = normalizeImageExtension(getUploadFileName(imageFile));
       if (!ext) {
@@ -380,7 +386,7 @@ export async function executeSaveFloorplan(
     }
 
     if (itemId) {
-      await updateProjectFloorplan(itemId, {
+      await updateProjectFloorplan(itemId, siteName, {
         type_name: typeName,
         supply_area: supplyArea,
         exclusive_area: exclusiveArea,
@@ -413,11 +419,7 @@ export async function executeSaveFloorplan(
 export async function executeSaveCommunity(
   formData: FormData,
 ): Promise<ProjectContentActionResult<ProjectCommunityItem[]>> {
-  console.log("Save button clicked");
-  console.log("Saving community...");
-
   const siteName = getCurrentSiteName();
-  console.log("Site name:", siteName);
 
   const itemId = String(formData.get("item_id") ?? "").trim();
   const title = String(formData.get("title") ?? "");
@@ -428,24 +430,12 @@ export async function executeSaveCommunity(
   const imageFile = formData.get("image");
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
-  const payload = {
-    siteName,
-    itemId: itemId || null,
-    title,
-    subtitle,
-    description,
-    sortOrder,
-    existingImageUrl,
-    hasNewImage: imageFile instanceof File && imageFile.size > 0,
-  };
-  console.log("Payload:", payload);
-
   try {
     let imageUrl = existingImageUrl;
 
     if (isUploadFile(imageFile)) {
       if (imageFile.size > MAX_FILE_SIZE) {
-        return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+        return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
       }
       const ext = normalizeImageExtension(getUploadFileName(imageFile));
       if (!ext) {
@@ -459,17 +449,14 @@ export async function executeSaveCommunity(
         imageFile,
         getCommunityImagePath(siteName, id, ext),
       );
-      console.log("[save:community] Storage upload OK, image_url:", imageUrl);
     }
 
     if (!title.trim()) {
       return { success: false, message: "시설명을 입력해 주세요." };
     }
 
-    let savedRow: ProjectCommunityItem;
-
     if (itemId) {
-      savedRow = await updateProjectCommunityItem(itemId, {
+      await updateProjectCommunityItem(itemId, siteName, {
         title,
         subtitle,
         description,
@@ -477,7 +464,7 @@ export async function executeSaveCommunity(
       });
     } else {
       const current = await getProjectCommunity(siteName);
-      savedRow = await insertProjectCommunityItem(siteName, {
+      await insertProjectCommunityItem(siteName, {
         sort_order: sortOrder || current.length,
         title,
         subtitle,
@@ -486,14 +473,10 @@ export async function executeSaveCommunity(
       });
     }
 
-    console.log("Supabase Response:", savedRow);
-
     const data = await getProjectCommunity(siteName);
     revalidateProjectContentPages();
-    console.log("[save:community] Success", data.length, "items");
     return { success: true, message: "커뮤니티 시설이 저장되었습니다.", data };
   } catch (error) {
-    console.error(error);
     const message = formatSupabaseError(error);
     console.error("[save:community] Failed:", message, error);
     return { success: false, message };
@@ -503,9 +486,10 @@ export async function executeSaveCommunity(
 export async function executeDeleteCommunityItem(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectCommunityItem[]>> {
+  const siteName = getCurrentSiteName();
   try {
-    await deleteProjectCommunityItem(itemId);
-    const data = await getProjectCommunity();
+    await deleteProjectCommunityItem(itemId, siteName);
+    const data = await getProjectCommunity(siteName);
     revalidateProjectContentPages();
     return { success: true, message: "시설이 삭제되었습니다.", data };
   } catch (error) {
@@ -517,9 +501,10 @@ export async function executeDeleteCommunityItem(
 export async function executeReorderCommunity(
   orderedIds: string[],
 ): Promise<ProjectContentActionResult<ProjectCommunityItem[]>> {
+  const siteName = getCurrentSiteName();
   try {
-    await reorderProjectCommunity(getCurrentSiteName(), orderedIds);
-    const data = await getProjectCommunity();
+    await reorderProjectCommunity(siteName, orderedIds);
+    const data = await getProjectCommunity(siteName);
     revalidateProjectContentPages();
     return { success: true, message: "순서가 변경되었습니다.", data };
   } catch (error) {
@@ -531,8 +516,9 @@ export async function executeReorderCommunity(
 export async function executeDeletePremiumCard(
   cardId: string,
 ): Promise<ProjectContentActionResult<ProjectPremiumData>> {
+  const siteName = getCurrentSiteName();
   try {
-    await deleteProjectPremiumCard(cardId);
+    await deleteProjectPremiumCard(cardId, siteName);
     const data = await getProjectPremium();
     revalidateProjectContentPages();
     return { success: true, message: "카드가 삭제되었습니다.", data };
@@ -557,8 +543,9 @@ export async function executeReorderPremiumCards(
 export async function executeDeleteGalleryItem(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectGalleryItem[]>> {
+  const siteName = getCurrentSiteName();
   try {
-    await deleteProjectGalleryItem(itemId);
+    await deleteProjectGalleryItem(itemId, siteName);
     const data = await getProjectGallery();
     revalidateProjectContentPages();
     return { success: true, message: "이미지가 삭제되었습니다.", data };
@@ -570,8 +557,9 @@ export async function executeDeleteGalleryItem(
 export async function executeSetGalleryFeatured(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectGalleryItem[]>> {
+  const siteName = getCurrentSiteName();
   try {
-    await updateProjectGalleryItem(itemId, { is_featured: true });
+    await updateProjectGalleryItem(itemId, siteName, { is_featured: true });
     const data = await getProjectGallery();
     revalidateProjectContentPages();
     return { success: true, message: "대표 이미지가 설정되었습니다.", data };
@@ -596,8 +584,9 @@ export async function executeReorderGallery(
 export async function executeDeleteFloorplan(
   itemId: string,
 ): Promise<ProjectContentActionResult<ProjectFloorplan[]>> {
+  const siteName = getCurrentSiteName();
   try {
-    await deleteProjectFloorplan(itemId);
+    await deleteProjectFloorplan(itemId, siteName);
     const data = await getProjectFloorplans();
     revalidateProjectContentPages();
     return { success: true, message: "평면도가 삭제되었습니다.", data };

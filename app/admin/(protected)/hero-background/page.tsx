@@ -1,5 +1,5 @@
 import HeroBackgroundManager from "@/components/admin/HeroBackgroundManager";
-import { getHeroBackgroundUrl } from "@/lib/storage/site-settings";
+import { getHeroBackgroundUrlForAdmin } from "@/lib/storage/site-settings";
 
 export const metadata = {
   title: "메인 배경 관리",
@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default async function AdminHeroBackgroundPage() {
-  const initialBackgroundUrl = await getHeroBackgroundUrl();
+  const initialBackgroundUrl = await getHeroBackgroundUrlForAdmin();
 
   return (
     <HeroBackgroundManager initialBackgroundUrl={initialBackgroundUrl} />

@@ -41,7 +41,7 @@ export async function executeUploadHeroBackground(
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    return { success: false, message: "이미지 크기는 10MB 이하여야 합니다." };
+    return { success: false, message: "이미지 크기는 4MB 이하여야 합니다. (Vercel 업로드 한도)" };
   }
 
   const extension = normalizeImageExtension(getUploadFileName(file));
@@ -91,7 +91,7 @@ export async function executeUploadHeroBackground(
       .upload(objectPath, buffer, {
         upsert: true,
         contentType,
-        cacheControl: "3600",
+        cacheControl: "60",
       });
 
     if (uploadError) {
@@ -103,6 +103,7 @@ export async function executeUploadHeroBackground(
     }
 
     const publicUrl = buildPublicStorageUrl(supabaseUrl, objectPath);
+    console.log("[save:hero-background] imageUrl:", publicUrl);
     await setSiteSetting(SITE_SETTING_KEYS.HERO_BACKGROUND, publicUrl);
 
     revalidatePath("/");

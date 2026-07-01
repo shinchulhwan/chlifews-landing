@@ -4,6 +4,10 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Trash2, Upload } from "lucide-react";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { applySaveResult, postAdminSave } from "@/lib/admin/save-client";
 import { broadcastProjectContent } from "@/lib/project-content/broadcast";
 import {
@@ -39,6 +43,9 @@ export default function OverviewManager({ initialData }: OverviewManagerProps) {
   );
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [imageUrl, setImageUrl] = useState<string | null>(initialData?.image_url ?? null);
+  const [imageUpdatedAt, setImageUpdatedAt] = useState<string | null>(
+    initialData?.updated_at ?? null,
+  );
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [infoCards, setInfoCards] = useState<OverviewInfoCard[]>(() =>
@@ -46,7 +53,9 @@ export default function OverviewManager({ initialData }: OverviewManagerProps) {
   );
   const [isSaving, setIsSaving] = useState(false);
 
-  const displayImage = previewUrl ?? imageUrl;
+  const displayImage =
+    previewUrl ??
+    withImageCacheBust(imageUrl, cacheBustFromUpdatedAt(imageUpdatedAt));
   const defaultCards = infoCards.filter((card) => isDefaultOverviewLabel(card.label));
   const customCards = infoCards.filter((card) => !isDefaultOverviewLabel(card.label));
 
@@ -107,6 +116,8 @@ export default function OverviewManager({ initialData }: OverviewManagerProps) {
         setDescription(result.data.description);
         setInfoCards(mergeOverviewInfoCards(result.data.info_cards));
         setImageUrl(result.data.image_url);
+        setImageUpdatedAt(result.data.updated_at);
+        console.log("[OverviewManager] DB image_url:", result.data.image_url);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
         setSelectedFile(null);

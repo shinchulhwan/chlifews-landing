@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth/admin";
 import {
+  getCmsEnvErrorResponse,
+  logApiRouteError,
+} from "@/lib/admin/api-route-utils";
+import {
   executeDeleteCommunityItem,
   executeDeleteFloorplan,
   executeDeleteGalleryItem,
@@ -32,6 +36,11 @@ export async function POST(request: Request) {
       { success: false, message: "관리자 로그인이 필요합니다." },
       { status: 401 },
     );
+  }
+
+  const envError = getCmsEnvErrorResponse();
+  if (envError) {
+    return envError;
   }
 
   const contentType = request.headers.get("content-type") ?? "";
@@ -133,9 +142,9 @@ export async function POST(request: Request) {
         );
     }
   } catch (error) {
+    logApiRouteError("api/admin/project-content", error);
     const message =
       error instanceof Error ? error.message : "저장 중 알 수 없는 오류가 발생했습니다.";
-    console.error("[api/admin/project-content] Unhandled error:", error);
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

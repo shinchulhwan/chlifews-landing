@@ -5,6 +5,10 @@ import { useMemo } from "react";
 import { LightboxTrigger } from "@/components/lightbox";
 import type { LightboxItem } from "@/lib/lightbox/types";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { useLiveProjectContent } from "@/lib/project-content/use-live-content";
 import type { ProjectOverview } from "@/lib/types/project-content";
 
@@ -18,7 +22,10 @@ export default function Overview({ initialData }: OverviewProps) {
   const sectionTitle = data?.section_title ?? "사업개요";
   const description = data?.description ?? "";
   const infoCards = data?.info_cards ?? [];
-  const imageUrl = data?.image_url;
+  const imageUrl = withImageCacheBust(
+    data?.image_url,
+    cacheBustFromUpdatedAt(data?.updated_at),
+  );
   const hasContent =
     Boolean(description) || Boolean(imageUrl) || infoCards.some((card) => card.value);
 

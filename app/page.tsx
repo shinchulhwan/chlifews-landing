@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 import QuickMenu from "@/components/QuickMenu";
 import { LightboxProvider } from "@/components/lightbox";
 import StructuredData from "@/components/seo/StructuredData";
-import { getHeroBackgroundUrl } from "@/lib/storage/site-settings";
+import { getHeroBackgroundSetting } from "@/lib/storage/site-settings";
 import {
   getProjectCommunity,
   getProjectFloorplans,
@@ -38,7 +38,7 @@ export default async function Home() {
     communityItems,
     floorplanItems,
   ] = await Promise.all([
-    getHeroBackgroundUrl(),
+    getHeroBackgroundSetting(),
     getProjectOverview(),
     getProjectPremium(),
     getProjectLocation(),
@@ -54,7 +54,10 @@ export default async function Home() {
       <QuickMenu />
       <main className="pb-[76px] lg:pb-0">
         <LightboxProvider>
-          <Hero initialBackgroundUrl={heroBackgroundUrl} />
+          <Hero
+            initialBackgroundUrl={heroBackgroundUrl?.url ?? null}
+            initialUpdatedAt={heroBackgroundUrl?.updated_at ?? null}
+          />
           <Overview initialData={overviewData} />
           <Premium initialData={premiumData} />
           <Location initialData={locationData} />

@@ -1,31 +1,51 @@
-const FOOTER_PHONE = "1844-0148";
-const FOOTER_PHONE_TEL = "tel:18440148";
+import { loadSiteSettings } from "@/lib/site-settings/load";
 
-export default function Footer() {
+export default async function Footer() {
+  const settings = await loadSiteSettings();
+  const phone = settings.contactPhone.replace(/[^0-9]/g, "");
+  const phoneTel = phone ? `tel:${phone}` : undefined;
+
   return (
     <footer className="border-t border-white/10 bg-navy pb-24 pt-10 lg:pb-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="space-y-4 text-center text-sm leading-relaxed text-white/60">
           <p className="text-white/80">
-            <span className="font-medium">씨에이치랩스</span>
-            <span className="mx-2 text-white/30" aria-hidden="true">
-              |
-            </span>
-            <span>
-              대표번호:{" "}
-              <a
-                href={FOOTER_PHONE_TEL}
-                className="font-medium text-gold transition-colors hover:text-gold/80"
-              >
-                {FOOTER_PHONE}
-              </a>
-            </span>
+            <span className="font-medium">{settings.companyName}</span>
+            {settings.contactPhone && (
+              <>
+                <span className="mx-2 text-white/30" aria-hidden="true">
+                  |
+                </span>
+                <span>
+                  대표번호:{" "}
+                  {phoneTel ? (
+                    <a
+                      href={phoneTel}
+                      className="font-medium text-gold transition-colors hover:text-gold/80"
+                    >
+                      {settings.contactPhone}
+                    </a>
+                  ) : (
+                    settings.contactPhone
+                  )}
+                </span>
+              </>
+            )}
           </p>
 
-          <p className="mx-auto max-w-3xl text-xs leading-relaxed text-white/50 sm:text-sm">
-            *본 홈페이지에 사용된 이미지 및 내용은 소비자의 이해를 돕기 위한 것으로
-            실제와 다르거나 인허가 과정에 따라 변경될 수 있습니다.
-          </p>
+          {settings.address && (
+            <p className="text-xs text-white/50">{settings.address}</p>
+          )}
+
+          {settings.contactEmail && (
+            <p className="text-xs text-white/50">{settings.contactEmail}</p>
+          )}
+
+          {settings.footerText && (
+            <p className="mx-auto max-w-3xl text-xs leading-relaxed text-white/50 sm:text-sm">
+              {settings.footerText}
+            </p>
+          )}
 
           <div className="space-y-1 pt-2 text-xs text-white/45">
             <p>개인정보관리책임자 : 신철환</p>

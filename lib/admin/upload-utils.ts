@@ -11,4 +11,5 @@ export function getUploadFileName(file: File | Blob): string {
   return "upload.jpg";
 }
 
-export const MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024;
+/** Vercel Serverless 요청 본문 한도(약 4.5MB)에 맞춤 */
+export const MAX_UPLOAD_FILE_SIZE = 4 * 1024 * 1024;

@@ -6,55 +6,67 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { fadeUp } from "@/lib/animations";
+import {
+  cacheBustFromUpdatedAt,
+  withImageCacheBust,
+} from "@/lib/images/display-url";
 import { HERO_IMAGE_ALT, SITE_BRAND } from "@/lib/seo/site";
 import { SITE_SETTING_KEYS } from "@/lib/site-settings/keys";
 import { subscribeSiteSetting } from "@/lib/site-settings/broadcast";
 
 type HeroProps = {
-  initialBackgroundUrl: string;
+  initialBackgroundUrl: string | null;
+  initialUpdatedAt?: string | null;
 };
 
 function isExternalUrl(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://");
 }
 
-function withCacheBuster(url: string, version: number): string {
-  if (version === 0 || !isExternalUrl(url)) {
-    return url;
-  }
-
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}v=${version}`;
-}
-
-export default function Hero({ initialBackgroundUrl }: HeroProps) {
-  const [backgroundUrl, setBackgroundUrl] = useState(initialBackgroundUrl);
-  const [version, setVersion] = useState(0);
+export default function Hero({
+  initialBackgroundUrl,
+  initialUpdatedAt = null,
+}: HeroProps) {
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(
+    initialBackgroundUrl,
+  );
+  const [updatedAt, setUpdatedAt] = useState<string | null>(initialUpdatedAt);
+  const [liveVersion, setLiveVersion] = useState(0);
 
   useEffect(() => {
     setBackgroundUrl(initialBackgroundUrl);
-  }, [initialBackgroundUrl]);
+    setUpdatedAt(initialUpdatedAt);
+  }, [initialBackgroundUrl, initialUpdatedAt]);
 
   useEffect(() => {
     return subscribeSiteSetting(SITE_SETTING_KEYS.HERO_BACKGROUND, (value) => {
       setBackgroundUrl(value);
-      setVersion((v) => v + 1);
+      setUpdatedAt(new Date().toISOString());
+      setLiveVersion((v) => v + 1);
     });
   }, []);
 
-  const imageSrc = withCacheBuster(backgroundUrl, version);
+  const version =
+    liveVersion > 0
+      ? String(liveVersion)
+      : cacheBustFromUpdatedAt(updatedAt);
+  const imageSrc = backgroundUrl
+    ? withImageCacheBust(backgroundUrl, version)
+    : null;
 
   return (
-    <section className="relative h-screen min-h-[600px] w-full overflow-hidden">
-      <Image
-        src={imageSrc}
-        alt={HERO_IMAGE_ALT}
-        fill
-        priority
-        unoptimized={isExternalUrl(imageSrc)}
-        className="object-cover object-center"
-        sizes="100vw"
-      />
+    <section className="relative h-screen min-h-[600px] w-full overflow-hidden bg-navy">
+      {imageSrc && (
+        <Image
+          src={imageSrc}
+          alt={HERO_IMAGE_ALT}
+          fill
+          priority
+          unoptimized={isExternalUrl(imageSrc)}
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+      )}
 
       <div
         className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/60 to-navy/20"
