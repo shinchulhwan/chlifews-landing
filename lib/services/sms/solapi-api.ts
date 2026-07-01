@@ -112,6 +112,9 @@ export async function callSolapiSendApi(
     const responseText = await response.text();
     let responseData: Record<string, unknown> = {};
 
+    console.log("[Solapi API] HTTP status:", response.status);
+    console.log("[Solapi API] response body:", responseText);
+
     try {
       responseData = JSON.parse(responseText) as Record<string, unknown>;
     } catch {

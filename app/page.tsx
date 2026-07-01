@@ -5,11 +5,22 @@ import Overview from "@/components/Overview";
 import Premium from "@/components/Premium";
 import Location from "@/components/Location";
 import Gallery from "@/components/Gallery";
+import Community from "@/components/Community";
 import FloorPlan from "@/components/FloorPlan";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import QuickMenu from "@/components/QuickMenu";
+import { LightboxProvider } from "@/components/lightbox";
 import StructuredData from "@/components/seo/StructuredData";
+import { getHeroBackgroundUrl } from "@/lib/storage/site-settings";
+import {
+  getProjectCommunity,
+  getProjectFloorplans,
+  getProjectGallery,
+  getProjectLocation,
+  getProjectOverview,
+  getProjectPremium,
+} from "@/lib/storage/project-content";
 
 export const metadata: Metadata = {
   alternates: {
@@ -17,20 +28,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const [
+    heroBackgroundUrl,
+    overviewData,
+    premiumData,
+    locationData,
+    galleryItems,
+    communityItems,
+    floorplanItems,
+  ] = await Promise.all([
+    getHeroBackgroundUrl(),
+    getProjectOverview(),
+    getProjectPremium(),
+    getProjectLocation(),
+    getProjectGallery(),
+    getProjectCommunity(),
+    getProjectFloorplans(),
+  ]);
+
   return (
     <>
       <StructuredData path="/" />
       <Header />
       <QuickMenu />
       <main className="pb-[76px] lg:pb-0">
-        <Hero />
-        <Overview />
-        <Premium />
-        <Location />
-        <Gallery />
-        <FloorPlan />
-        <CTA />
+        <LightboxProvider>
+          <Hero initialBackgroundUrl={heroBackgroundUrl} />
+          <Overview initialData={overviewData} />
+          <Premium initialData={premiumData} />
+          <Location initialData={locationData} />
+          <Gallery initialItems={galleryItems} />
+          <Community initialItems={communityItems} />
+          <FloorPlan initialItems={floorplanItems} />
+          <CTA />
+        </LightboxProvider>
       </main>
       <Footer />
     </>

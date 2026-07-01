@@ -11,9 +11,10 @@ export default function CTA() {
           <h2 className="mb-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             관심고객 등록
           </h2>
-          <p className="mx-auto max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
-            Aurora Residence에 관심이 있으시다면 아래 양식을 작성해 주세요.
-            담당 컨설턴트가 빠르게 연락드립니다.
+          <p className="mx-auto max-w-lg whitespace-pre-line text-sm leading-relaxed text-white/70 sm:text-base">
+            {`동암역 더트루엘 관심고객등록 이벤트
+관심고객등록 후 계약시 100만원 계약축하금 지원
+선착순 30고객! 지금 바로 등록 후 상담 받으세요`}
           </p>
         </div>
 

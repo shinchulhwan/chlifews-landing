@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import AdminNav from "@/components/admin/AdminNav";
 import { isAdminAuthenticated } from "@/lib/auth/admin";
 
 export default async function AdminProtectedLayout({
@@ -10,5 +11,10 @@ export default async function AdminProtectedLayout({
     redirect("/admin/login");
   }
 
-  return children;
+  return (
+    <>
+      <AdminNav />
+      {children}
+    </>
+  );
 }

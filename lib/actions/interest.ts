@@ -12,12 +12,14 @@ import {
 } from "@/lib/supabase/customers-schema";
 import { normalizeCreatedAt } from "@/lib/format/created-at";
 import { getSiteNameForInsert } from "@/lib/config/site";
+import { isSolapiSmsConfigured, logSmsEnvDiagnostic } from "@/lib/config/sms-env";
 import { buildNewCustomerSmsPayload } from "@/lib/services/sms/build-payload";
 import { sendAdminNewCustomerSms } from "@/lib/services/sms";
 import type { InterestCustomer } from "@/lib/types/interest-customer";
 import {
   parseCustomerFormData,
   validateCustomer,
+  validatePrivacyConsent,
   type CustomerErrors,
   type CustomerInput,
 } from "@/lib/validations/customer";
@@ -163,7 +165,18 @@ export async function submitInterestCustomer(
   formData: FormData,
 ): Promise<InterestCustomerResult> {
   const parsed = parseCustomerFormData(formData);
+  const privacyErrors = validatePrivacyConsent(formData);
   const validation = validateCustomer(parsed);
+
+  if (Object.keys(privacyErrors).length > 0) {
+    const firstError =
+      Object.values(privacyErrors)[0] ?? "개인정보 수집 및 이용에 동의해 주세요.";
+    return {
+      success: false,
+      message: firstError,
+      errors: privacyErrors,
+    };
+  }
 
   if (!validation.success) {
     const firstError =
@@ -197,13 +210,33 @@ export async function submitInterestCustomer(
       saveResult.created_at,
     );
 
-    try {
-      await sendAdminNewCustomerSms(smsPayload);
-    } catch (error) {
+    logSmsEnvDiagnostic("submitInterestCustomer:before-sms");
+    console.log(
+      "[submitInterestCustomer] SMS configured:",
+      isSolapiSmsConfigured(),
+    );
+    console.log("[submitInterestCustomer] calling sendAdminNewCustomerSms");
+    console.log("[submitInterestCustomer] SMS payload:", smsPayload);
+
+    const smsResult = await sendAdminNewCustomerSms(smsPayload);
+
+    console.log(
+      "[submitInterestCustomer] SMS result:",
+      JSON.stringify(smsResult, null, 2),
+    );
+
+    if (!smsResult.success) {
       console.log("===== SMS FAIL =====");
-      console.error(error);
-      console.error(
-        error instanceof Error ? error.message : "알 수 없는 SMS 오류",
+      console.log("[submitInterestCustomer] SMS error:", smsResult.error);
+      console.log(
+        "[submitInterestCustomer] SMS response:",
+        JSON.stringify(smsResult.response ?? null, null, 2),
+      );
+    } else {
+      console.log("===== SMS SUCCESS =====");
+      console.log(
+        "[submitInterestCustomer] messageId:",
+        smsResult.messageId ?? "(none)",
       );
     }
 

@@ -1,4 +1,4 @@
-export const SITE_NAME = "Aurora Residence";
+export const SITE_NAME = "동암역 더트루엘 1844-0148";
 export const SITE_DESCRIPTION =
   "도심의 중심에서 만나는 프리미엄 라이프, Aurora Residence — 당신의 새로운 주거 공간을 제안합니다.";
 
@@ -14,6 +14,7 @@ export const NAV_LINKS = [
   { label: "프리미엄", href: "#premium" },
   { label: "입지환경", href: "#location" },
   { label: "갤러리", href: "#gallery" },
-  { label: "평면도", href: "#floorplan" },
-  { label: "상담신청", href: "#contact" },
+  { label: "단지 커뮤니티", href: "#community" },
+  { label: "평면도/단지배치도", href: "#floorplan" },
+  { label: "관심고객등록 ※이벤트※", href: "#contact" },
 ] as const;

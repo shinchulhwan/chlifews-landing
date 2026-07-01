@@ -1,20 +1,57 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { fadeUp } from "@/lib/animations";
 import { HERO_IMAGE_ALT, SITE_BRAND } from "@/lib/seo/site";
+import { SITE_SETTING_KEYS } from "@/lib/site-settings/keys";
+import { subscribeSiteSetting } from "@/lib/site-settings/broadcast";
 
-export default function Hero() {
+type HeroProps = {
+  initialBackgroundUrl: string;
+};
+
+function isExternalUrl(url: string): boolean {
+  return url.startsWith("http://") || url.startsWith("https://");
+}
+
+function withCacheBuster(url: string, version: number): string {
+  if (version === 0 || !isExternalUrl(url)) {
+    return url;
+  }
+
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${version}`;
+}
+
+export default function Hero({ initialBackgroundUrl }: HeroProps) {
+  const [backgroundUrl, setBackgroundUrl] = useState(initialBackgroundUrl);
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    setBackgroundUrl(initialBackgroundUrl);
+  }, [initialBackgroundUrl]);
+
+  useEffect(() => {
+    return subscribeSiteSetting(SITE_SETTING_KEYS.HERO_BACKGROUND, (value) => {
+      setBackgroundUrl(value);
+      setVersion((v) => v + 1);
+    });
+  }, []);
+
+  const imageSrc = withCacheBuster(backgroundUrl, version);
+
   return (
     <section className="relative h-screen min-h-[600px] w-full overflow-hidden">
       <Image
-        src="/images/hero.jpg"
+        src={imageSrc}
         alt={HERO_IMAGE_ALT}
         fill
         priority
+        unoptimized={isExternalUrl(imageSrc)}
         className="object-cover object-center"
         sizes="100vw"
       />
@@ -61,10 +98,10 @@ export default function Hero() {
             animate="visible"
             custom={0.3}
             variants={fadeUp}
-            className="mb-10 max-w-lg text-sm leading-relaxed text-white/75 sm:text-base"
+            className="mb-10 max-w-lg whitespace-pre-line text-sm leading-relaxed text-white/75 sm:text-base"
           >
-            탁 트인 스카이라인과 프리미엄 커뮤니티 시설이 조화를 이루는
-            Aurora Residence. 당신의 일상을 한층 더 품격 있게 완성합니다.
+            {`GTX를 품은 초역세권, 완성형 교통 프리미엄
+미래가치와 시세차익 기대가능성이 높은 동암역 더트루엘을 선점하세요`}
           </motion.p>
 
           <motion.div

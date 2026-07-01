@@ -60,7 +60,7 @@ function RegisterButton({ className = "" }: { className?: string }) {
         className="shrink-0 transition-transform duration-300 group-hover:scale-110"
         aria-hidden="true"
       />
-      <span>관심고객 등록</span>
+      <span>관심고객등록 ※이벤트※</span>
     </a>
   );
 }

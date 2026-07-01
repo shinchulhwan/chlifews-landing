@@ -4,9 +4,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { submitInterestCustomer } from "@/lib/actions/interest";
+import PrivacyConsent from "@/components/PrivacyConsent";
 import { fadeUp } from "@/lib/animations";
 import {
+  parseCustomerFormData,
   validateCustomer,
+  validatePrivacyConsent,
   type CustomerErrors,
   type CustomerField,
 } from "@/lib/validations/customer";
@@ -54,16 +57,21 @@ export default function ContactForm() {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
+    const privacyErrors = validatePrivacyConsent(formData);
     const clientValidation = validateCustomer({
       name: String(formData.get("name") ?? ""),
       phone: String(formData.get("phone") ?? ""),
       memo: String(formData.get("memo") ?? ""),
     });
 
-    if (!clientValidation.success) {
-      setErrors(clientValidation.errors);
+    if (!clientValidation.success || Object.keys(privacyErrors).length > 0) {
+      const mergedErrors = {
+        ...(clientValidation.success ? {} : clientValidation.errors),
+        ...privacyErrors,
+      };
+      setErrors(mergedErrors);
       const firstError =
-        Object.values(clientValidation.errors)[0] ?? "입력값을 확인해 주세요.";
+        Object.values(mergedErrors)[0] ?? "입력값을 확인해 주세요.";
       setStatus({ type: "error", message: firstError });
       return;
     }
@@ -161,6 +169,11 @@ export default function ContactForm() {
           </label>
           <FieldError message={errors.memo} />
         </div>
+
+        <PrivacyConsent
+          error={errors.privacyConsent}
+          onChange={() => clearFieldError("privacyConsent")}
+        />
 
         {status.type === "error" && (
           <p className="text-sm text-red-300" role="alert">

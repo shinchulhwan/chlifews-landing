@@ -1,6 +1,11 @@
 /**
  * 사이트 SEO 공통 설정 (랜딩페이지)
  */
+import {
+  ORGANIZATION_LOGO_PATH,
+  SITE_OG_IMAGE_PATH,
+} from "@/lib/assets/site-images";
+
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   "https://example.com";
@@ -31,7 +36,7 @@ export const OPEN_GRAPH_TITLE =
 export const OPEN_GRAPH_DESCRIPTION =
   "동암역 더트루엘 아파트 분양정보와 관심고객 등록, 방문예약 상담을 제공합니다.";
 
-export const OG_IMAGE_PATH = "/images/hero.jpg";
+export const OG_IMAGE_PATH = SITE_OG_IMAGE_PATH;
 export const OG_IMAGE_ALT =
   "동암역 더트루엘 아파트 분양 모델하우스 및 외관 전경";
 
@@ -39,4 +44,4 @@ export const HERO_IMAGE_ALT =
   "동암역 더트루엘 아파트 분양 모델하우스 외관 전경 이미지";
 
 export const ORGANIZATION_NAME = SITE_BRAND;
-export const ORGANIZATION_LOGO_PATH = "/images/hero.jpg";
+export { ORGANIZATION_LOGO_PATH };

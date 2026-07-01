@@ -4,7 +4,7 @@ export type CustomerInput = {
   memo: string | null;
 };
 
-export type CustomerField = keyof CustomerInput;
+export type CustomerField = keyof CustomerInput | "privacyConsent";
 
 export type CustomerErrors = Partial<Record<CustomerField, string>>;
 
@@ -88,4 +88,16 @@ export function parseCustomerFormData(formData: FormData): CustomerInput {
     phone: String(formData.get("phone") ?? ""),
     memo: String(formData.get("memo") ?? ""),
   };
+}
+
+export function isPrivacyConsentGiven(formData: FormData): boolean {
+  const value = formData.get("privacy_consent");
+  return value === "yes" || value === "on" || value === "true";
+}
+
+export function validatePrivacyConsent(formData: FormData): CustomerErrors {
+  if (isPrivacyConsentGiven(formData)) {
+    return {};
+  }
+  return { privacyConsent: "개인정보 수집 및 이용에 동의해 주세요." };
 }
