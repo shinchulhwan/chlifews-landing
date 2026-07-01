@@ -163,7 +163,15 @@ export default function Hero({
           <span className="text-xs font-medium tracking-widest uppercase">
             Scroll
           </span>
-          <ArrowDown size={20} />
+          {/* Mobile — 스크롤 유도 애니메이션 */}
+          <span className="flex h-10 w-6 items-start justify-center rounded-full border border-white/30 p-1 md:hidden">
+            <motion.span
+              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+              className="block h-2 w-1 rounded-full bg-gold"
+            />
+          </span>
+          <ArrowDown size={20} className="hidden md:block" />
         </motion.a>
       </motion.div>
     </section>

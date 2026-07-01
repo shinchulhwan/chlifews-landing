@@ -32,3 +32,28 @@ body {
   background-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
   color: var(--color-navy);
 }
+
+/* Mobile Swiper — 768px 이하 전용 스타일 */
+@media (max-width: 767px) {
+  .mobile-swiper .swiper-pagination {
+    bottom: 0 !important;
+  }
+
+  .mobile-swiper .swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .mobile-swiper .swiper-pagination-bullet-active {
+    transform: scale(1.25);
+  }
+
+  .floorplan-swiper .swiper-zoom-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

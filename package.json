@@ -13,7 +13,9 @@
     "test:solapi-sms": "npx tsx scripts/test-solapi-sms.ts",
     "test:sms-env": "npx tsx scripts/test-sms-env.ts",
     "test:site-name-insert": "npx tsx scripts/test-site-name-insert.ts",
-    "test:db-schema": "npx tsx scripts/verify-db-schema.ts"
+    "test:db-schema": "npx tsx scripts/verify-db-schema.ts",
+    "migrate:landing-builder": "npx tsx scripts/run-landing-builder-migrations.ts",
+    "migrate:landing-builder:seed": "npx tsx scripts/run-landing-builder-migrations.ts -- --seed-only"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
@@ -22,7 +24,8 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "swiper": "^14.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -31,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "pg": "^8.22.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5"

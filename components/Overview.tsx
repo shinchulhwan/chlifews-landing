@@ -3,6 +3,10 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { LightboxTrigger } from "@/components/lightbox";
+import MobileFadeSection from "@/components/mobile/MobileFadeSection";
+import { MobileImageSlide, MobileInfoSlide } from "@/components/mobile/MobileInfoSlide";
+import MobileSectionTitle from "@/components/mobile/MobileSectionTitle";
+import MobileSwiper from "@/components/mobile/MobileSwiper";
 import type { LightboxItem } from "@/lib/lightbox/types";
 import { isLightboxExternalUrl } from "@/lib/lightbox/types";
 import {
@@ -37,7 +41,51 @@ export default function Overview({ initialData }: OverviewProps) {
   return (
     <section id="overview" className="bg-light-gray py-20">
       <h2 className="sr-only">{sectionTitle}</h2>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+      {/* Mobile — 한 화면 = 한 정보 */}
+      <div className="md:hidden">
+        {!hasContent ? (
+          <div className="px-6 text-center text-[15px] leading-[1.7] text-navy/50">
+            Project Overview — 구현 예정
+          </div>
+        ) : (
+          <MobileFadeSection>
+            <MobileSectionTitle title={sectionTitle} />
+            <div className="px-6">
+              <MobileSwiper>
+                {imageUrl && (
+                  <MobileImageSlide>
+                    <LightboxTrigger
+                      items={lightboxItems}
+                      index={0}
+                      className="relative block h-full min-h-[min(70vh,520px)] w-full"
+                    >
+                      <Image
+                        src={imageUrl}
+                        alt={sectionTitle}
+                        fill
+                        unoptimized={isLightboxExternalUrl(imageUrl)}
+                        className="object-cover"
+                        sizes="100vw"
+                      />
+                    </LightboxTrigger>
+                  </MobileImageSlide>
+                )}
+                {infoCards.map((card) => (
+                  <MobileInfoSlide
+                    key={card.id}
+                    label={card.label}
+                    value={card.value || "-"}
+                  />
+                ))}
+              </MobileSwiper>
+            </div>
+          </MobileFadeSection>
+        )}
+      </div>
+
+      {/* Desktop — 기존 레이아웃 유지 */}
+      <div className="mx-auto hidden max-w-7xl px-4 sm:px-6 md:block lg:px-8">
         {!hasContent ? (
           <div className="text-center text-navy/50">Project Overview — 구현 예정</div>
         ) : (

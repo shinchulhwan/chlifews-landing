@@ -185,7 +185,7 @@ export default function ContactForm({ siteName }: { siteName?: string }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gold px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gold/90 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+          className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gold px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gold/90 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 md:py-3.5 min-h-[52px] md:min-h-0 text-base md:text-sm"
         >
           {isSubmitting ? (
             <>
