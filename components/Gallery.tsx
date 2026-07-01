@@ -56,7 +56,7 @@ export default function Gallery({ initialItems }: GalleryProps) {
           </div>
         ) : (
           <MobileFadeSection>
-            <MobileSectionTitle title="갤러리" />
+            <MobileSectionTitle title="갤러리" className="px-6" />
             <MobileSwiper className="!px-0" options={{ spaceBetween: 0 }}>
               {orderedItems.map((item, idx) => (
                 <LightboxTrigger

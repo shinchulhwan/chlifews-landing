@@ -57,6 +57,7 @@ export default function Premium({ initialData }: PremiumProps) {
             <MobileSectionTitle
               title={sectionTitle}
               description={sectionDescription || undefined}
+              className="px-6"
             />
             {cards.length > 0 && (
               <div className="px-6">

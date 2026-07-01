@@ -33,8 +33,8 @@ export default function MobileSwiper({
       slidesPerView={1}
       spaceBetween={16}
       speed={500}
-      pagination={{ clickable: true, dynamicBullets: true }}
-      className={`mobile-swiper pb-10 ${className}`}
+      pagination={{ clickable: true }}
+      className={`mobile-swiper w-full max-w-full min-w-0 overflow-hidden pb-10 ${className}`}
       style={
         {
           "--swiper-theme-color": "#c9a96e",
@@ -48,7 +48,10 @@ export default function MobileSwiper({
       }}
     >
       {slides.map((child, index) => (
-        <SwiperSlide key={index} className={slideClassName}>
+        <SwiperSlide
+          key={index}
+          className={`!h-auto !w-full max-w-full box-border ${slideClassName}`}
+        >
           {child}
         </SwiperSlide>
       ))}

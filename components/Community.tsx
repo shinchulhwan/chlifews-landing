@@ -37,6 +37,7 @@ export default function Community({ initialItems }: CommunityProps) {
             <MobileSectionTitle
               title="단지 커뮤니티"
               description="입주민을 위한 프리미엄 커뮤니티 시설"
+              className="px-6"
             />
             <div className="px-6">
               <MobileSwiper>

@@ -55,7 +55,7 @@ export default function FloorPlan({ initialItems }: FloorPlanProps) {
           </div>
         ) : (
           <MobileFadeSection>
-            <MobileSectionTitle title="평면도" />
+            <MobileSectionTitle title="평면도" className="px-6" />
             <div className="px-6">
               <Swiper
                 modules={[Pagination, Zoom, A11y]}

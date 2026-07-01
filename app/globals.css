@@ -35,8 +35,51 @@ body {
 
 /* Mobile Swiper — 768px 이하 전용 스타일 */
 @media (max-width: 767px) {
+  /* 입지환경 — 가로 스크롤 방지 */
+  #location {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  #location .location-mobile-map,
+  #location .location-mobile-map img {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+  }
+
+  #location .location-mobile-map img {
+    object-fit: cover;
+    display: block;
+  }
+
+  #location .location-points-swiper.swiper,
+  #location .mobile-swiper.swiper {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  #location .swiper-wrapper {
+    box-sizing: border-box;
+  }
+
+  #location .swiper-slide {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    height: auto;
+  }
+
   .mobile-swiper .swiper-pagination {
     bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100%;
   }
 
   .mobile-swiper .swiper-pagination-bullet {

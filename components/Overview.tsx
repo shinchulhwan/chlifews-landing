@@ -50,7 +50,7 @@ export default function Overview({ initialData }: OverviewProps) {
           </div>
         ) : (
           <MobileFadeSection>
-            <MobileSectionTitle title={sectionTitle} />
+            <MobileSectionTitle title={sectionTitle} className="px-6" />
             <div className="px-6">
               <MobileSwiper>
                 {imageUrl && (
