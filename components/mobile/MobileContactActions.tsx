@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardPen, MessageCircle, Phone } from "lucide-react";
-import { KAKAO_CHANNEL_URL, PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact-links";
+import { ClipboardPen, Phone } from "lucide-react";
+import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact-links";
 
 type MobileContactActionsProps = {
   phone?: string;
@@ -30,15 +30,6 @@ export default function MobileContactActions({
         <ClipboardPen size={22} aria-hidden="true" />
         관심고객 상담신청
       </Link>
-      <a
-        href={KAKAO_CHANNEL_URL}
-        target={KAKAO_CHANNEL_URL.startsWith("http") ? "_blank" : undefined}
-        rel={KAKAO_CHANNEL_URL.startsWith("http") ? "noopener noreferrer" : undefined}
-        className="flex min-h-[56px] items-center justify-center gap-3 rounded-[20px] border border-white/20 bg-[#FEE500] px-6 text-base font-semibold text-[#191919] shadow-lg transition-transform active:scale-[0.98]"
-      >
-        <MessageCircle size={22} aria-hidden="true" />
-        카카오톡 상담
-      </a>
     </div>
   );
 }
