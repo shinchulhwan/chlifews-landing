@@ -36,7 +36,6 @@ export default async function CTA({ siteName }: { siteName?: string }) {
           </h2>
           <p className="mx-auto max-w-lg whitespace-pre-line text-sm leading-relaxed text-white/70 sm:text-base">
             {`동암역 더트루엘 관심고객등록 이벤트
-관심고객등록 후 계약시 100만원 계약축하금 지원
 선착순 30고객! 지금 바로 등록 후 상담 받으세요`}
           </p>
         </div>
