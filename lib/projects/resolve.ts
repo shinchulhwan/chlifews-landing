@@ -20,6 +20,7 @@ export function buildLegacyDefaultProject(): ProjectRecord | null {
     storage_slug: storageSlug,
     display_name: siteName,
     domain: null,
+    status: "published",
     is_published: true,
     is_default: true,
     cloned_from_id: null,

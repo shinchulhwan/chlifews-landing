@@ -1,3 +1,6 @@
+import type { SiteStatus, CreateSiteInput, SiteListFilters } from "@/types/site";
+
+/** @deprecated Site 타입(@/types/site) 사용 권장 */
 export type ProjectRecord = {
   id: string;
   slug: string;
@@ -5,6 +8,7 @@ export type ProjectRecord = {
   storage_slug: string;
   display_name: string;
   domain: string | null;
+  status: SiteStatus;
   is_published: boolean;
   is_default: boolean;
   cloned_from_id: string | null;
@@ -12,15 +16,10 @@ export type ProjectRecord = {
   updated_at: string;
 };
 
-export type CreateProjectInput = {
-  displayName: string;
-  slug: string;
-  domain?: string;
-  siteName?: string;
-  cloneFromSlug?: string;
-};
+/** @deprecated CreateSiteInput(@/types/site) 사용 권장 */
+export type CreateProjectInput = CreateSiteInput;
 
-export type ProjectListFilters = {
-  query?: string;
-  publishedOnly?: boolean;
-};
+export type ProjectListFilters = SiteListFilters;
+
+export type { SiteStatus, CreateSiteInput, SiteListFilters } from "@/types/site";
+export type { Site } from "@/types/site";

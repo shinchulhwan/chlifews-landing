@@ -8,7 +8,23 @@ import {
   executeDeployProject,
   executeUpdateProjectPublish,
 } from "@/lib/projects/actions";
-import { listProjects } from "@/lib/projects/storage";
+import { listSites } from "@/services/site-service";
+import { siteToProjectRecord } from "@/modules/sites/site-mapper";
+
+function parseSiteBody(body: Record<string, unknown>) {
+  return {
+    displayName: String(body.displayName ?? ""),
+    siteName: body.siteName ? String(body.siteName) : undefined,
+    slug: String(body.slug ?? ""),
+    domain: body.domain ? String(body.domain) : undefined,
+    contactPhone: body.contactPhone ? String(body.contactPhone) : undefined,
+    heroImageUrl: body.heroImageUrl ? String(body.heroImageUrl) : undefined,
+    seoTitle: body.seoTitle ? String(body.seoTitle) : undefined,
+    seoDescription: body.seoDescription ? String(body.seoDescription) : undefined,
+    seoKeywords: body.seoKeywords ? String(body.seoKeywords) : undefined,
+    cloneFromSlug: body.cloneFromSlug ? String(body.cloneFromSlug) : undefined,
+  };
+}
 
 export async function GET(request: Request) {
   if (!await isAdminAuthenticated()) {
@@ -18,8 +34,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") ?? undefined;
 
-  const projects = await listProjects({ query });
-  return NextResponse.json({ success: true, data: projects });
+  const sites = await listSites({ query });
+  return NextResponse.json({
+    success: true,
+    data: sites.map(siteToProjectRecord),
+  });
 }
 
 export async function POST(request: Request) {
@@ -30,26 +49,14 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const action = String(body.action ?? "");
+    const siteInput = parseSiteBody(body);
 
     switch (action) {
       case "create":
-        return NextResponse.json(
-          await executeCreateProject({
-            displayName: String(body.displayName ?? ""),
-            slug: String(body.slug ?? ""),
-            domain: body.domain ? String(body.domain) : undefined,
-            siteName: body.siteName ? String(body.siteName) : undefined,
-            cloneFromSlug: body.cloneFromSlug ? String(body.cloneFromSlug) : undefined,
-          }),
-        );
+        return NextResponse.json(await executeCreateProject(siteInput));
       case "clone":
         return NextResponse.json(
-          await executeCloneProject(String(body.sourceSlug ?? ""), {
-            displayName: String(body.displayName ?? ""),
-            slug: String(body.slug ?? ""),
-            domain: body.domain ? String(body.domain) : undefined,
-            siteName: body.siteName ? String(body.siteName) : undefined,
-          }),
+          await executeCloneProject(String(body.sourceSlug ?? ""), siteInput),
         );
       case "delete":
         return NextResponse.json(await executeDeleteProject(String(body.slug ?? "")));

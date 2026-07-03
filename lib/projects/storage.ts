@@ -12,6 +12,7 @@ import type {
   CreateProjectInput,
   ProjectListFilters,
   ProjectRecord,
+  SiteStatus,
 } from "@/lib/projects/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
@@ -29,8 +30,19 @@ function getWriteClient(): SupabaseClient<Database> {
   return client;
 }
 
-function mapRow(row: ProjectRecord): ProjectRecord {
-  return row;
+function normalizeStatus(status: string | undefined, isPublished: boolean): SiteStatus {
+  const valid: SiteStatus[] = ["draft", "published", "deploying", "deployed", "failed"];
+  if (status && valid.includes(status as SiteStatus)) {
+    return status as SiteStatus;
+  }
+  return isPublished ? "published" : "draft";
+}
+
+function mapRow(row: Database["public"]["Tables"]["projects"]["Row"]): ProjectRecord {
+  return {
+    ...row,
+    status: normalizeStatus(row.status, row.is_published),
+  };
 }
 
 export async function listProjects(
@@ -225,6 +237,7 @@ export async function createProjectRecord(
       storage_slug: slug,
       display_name: input.displayName.trim() || siteName,
       domain: input.domain?.trim() || null,
+      status: input.setPublished ? "published" : "draft",
       is_published: input.setPublished ?? false,
       is_default: input.setDefault ?? false,
       cloned_from_id: input.clonedFromId ?? null,
@@ -248,7 +261,10 @@ export async function createProjectRecord(
 export async function updateProjectRecord(
   slug: string,
   patch: Partial<
-    Pick<ProjectRecord, "display_name" | "domain" | "is_published" | "is_default">
+    Pick<
+      ProjectRecord,
+      "display_name" | "domain" | "is_published" | "is_default" | "status"
+    >
   >,
 ): Promise<ProjectRecord> {
   const supabase = getWriteClient();
@@ -258,9 +274,22 @@ export async function updateProjectRecord(
     await supabase.from("projects").update({ is_default: false }).eq("is_default", true);
   }
 
+  const updatePayload: Database["public"]["Tables"]["projects"]["Update"] = {
+    ...patch,
+    updated_at: now,
+  };
+
+  if (patch.is_published !== undefined) {
+    updatePayload.status = patch.is_published ? "published" : "draft";
+  } else if (patch.status === "published") {
+    updatePayload.is_published = true;
+  } else if (patch.status === "draft") {
+    updatePayload.is_published = false;
+  }
+
   const { data, error } = await supabase
     .from("projects")
-    .update({ ...patch, updated_at: now })
+    .update(updatePayload)
     .eq("slug", normalizeProjectSlug(slug))
     .select("*")
     .single();

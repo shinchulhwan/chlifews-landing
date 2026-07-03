@@ -1,4 +1,4 @@
--- Landing Builder v1 마이그레이션 (012 + 013 통합)
+-- Landing Builder v1 마이그레이션 (012 + 013 + 014 status)
 -- Supabase Dashboard → SQL Editor → 전체 붙여넣기 → Run
 
 -- ========== 012 projects ==========
@@ -46,3 +46,14 @@ alter table public.site_settings
   add primary key (site_name, key);
 
 create index if not exists site_settings_site_name_idx on public.site_settings (site_name);
+
+-- ========== 014 projects.status ==========
+alter table public.projects
+  add column if not exists status text not null default 'draft';
+
+update public.projects
+set status = case when is_published then 'published' else 'draft' end
+where status = 'draft';
+
+create index if not exists projects_status_idx on public.projects (status);
+

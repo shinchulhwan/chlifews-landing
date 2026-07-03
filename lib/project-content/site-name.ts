@@ -15,6 +15,14 @@ export async function getCurrentSiteNameAsync(formData?: FormData): Promise<stri
   return getSiteNameFromEnv();
 }
 
+export async function getCurrentStorageSlugAsync(formData?: FormData): Promise<string | undefined> {
+  const { resolveAdminStorageSlug } = await import("@/lib/admin/project-context");
+  const projectSlug = formData
+    ? String(formData.get("projectSlug") ?? "").trim()
+    : "";
+  return resolveAdminStorageSlug(projectSlug || undefined);
+}
+
 /** @deprecated use getProjectStorageSlug */
 export function sanitizeSiteNameForStorage(siteName: string): string {
   return getProjectStorageSlug(siteName);

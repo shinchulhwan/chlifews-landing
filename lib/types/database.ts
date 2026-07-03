@@ -33,6 +33,7 @@ export type Database = {
           storage_slug: string;
           display_name: string;
           domain: string | null;
+          status: string;
           is_published: boolean;
           is_default: boolean;
           cloned_from_id: string | null;
@@ -46,6 +47,7 @@ export type Database = {
           storage_slug: string;
           display_name: string;
           domain?: string | null;
+          status?: string;
           is_published?: boolean;
           is_default?: boolean;
           cloned_from_id?: string | null;
@@ -59,6 +61,7 @@ export type Database = {
           storage_slug?: string;
           display_name?: string;
           domain?: string | null;
+          status?: string;
           is_published?: boolean;
           is_default?: boolean;
           cloned_from_id?: string | null;

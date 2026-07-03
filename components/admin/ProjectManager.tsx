@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { setActiveProjectSlug } from "@/lib/actions/admin-project";
 import { getProjectDeployUrl, getProjectPublicUrl } from "@/lib/projects/resolve";
-import type { ProjectRecord } from "@/lib/projects/types";
+import type { ProjectRecord, SiteStatus } from "@/lib/projects/types";
 import AdminPageShell, {
   AdminToast,
   adminCardClass,
@@ -27,6 +27,26 @@ import AdminPageShell, {
 type ProjectManagerProps = {
   initialProjects: ProjectRecord[];
   activeSlug: string | null;
+};
+
+const STATUS_LABELS: Record<SiteStatus, string> = {
+  draft: "초안",
+  published: "공개",
+  deploying: "배포 중",
+  deployed: "배포됨",
+  failed: "실패",
+};
+
+const emptyForm = {
+  displayName: "",
+  siteName: "",
+  slug: "",
+  domain: "",
+  contactPhone: "",
+  heroImageUrl: "",
+  seoTitle: "",
+  seoDescription: "",
+  cloneFromSlug: "",
 };
 
 async function postProjectAction(body: Record<string, unknown>) {
@@ -47,12 +67,7 @@ export default function ProjectManager({
   const [projects, setProjects] = useState(initialProjects);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    displayName: "",
-    slug: "",
-    domain: "",
-    cloneFromSlug: "",
-  });
+  const [form, setForm] = useState(emptyForm);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,8 +86,13 @@ export default function ProjectManager({
       const result = await postProjectAction({
         action: form.cloneFromSlug ? "clone" : "create",
         displayName: form.displayName,
+        siteName: form.siteName || undefined,
         slug: form.slug,
         domain: form.domain || undefined,
+        contactPhone: form.contactPhone || undefined,
+        heroImageUrl: form.heroImageUrl || undefined,
+        seoTitle: form.seoTitle || undefined,
+        seoDescription: form.seoDescription || undefined,
         cloneFromSlug: form.cloneFromSlug || undefined,
         sourceSlug: form.cloneFromSlug || undefined,
       });
@@ -80,12 +100,12 @@ export default function ProjectManager({
       if (result.success && result.data) {
         setProjects((prev) => [result.data, ...prev]);
         setToast({ type: "success", message: result.message });
-        setForm({ displayName: "", slug: "", domain: "", cloneFromSlug: "" });
+        setForm(emptyForm);
       } else {
         setToast({ type: "error", message: result.message });
       }
     } catch {
-      setToast({ type: "error", message: "프로젝트 생성에 실패했습니다." });
+      setToast({ type: "error", message: "사이트 생성에 실패했습니다." });
     } finally {
       setSaving(false);
     }
@@ -96,6 +116,7 @@ export default function ProjectManager({
     if (!slug) return;
     const displayName = window.prompt("프로젝트명", `${source.display_name} 복제`);
     if (!displayName) return;
+    const siteName = window.prompt("사이트명", `${source.site_name} 복제`) ?? displayName;
 
     setSaving(true);
     try {
@@ -104,10 +125,11 @@ export default function ProjectManager({
         sourceSlug: source.slug,
         slug,
         displayName,
+        siteName,
       });
       if (result.success && result.data) {
         setProjects((prev) => [result.data, ...prev]);
-        setToast({ type: "success", message: "프로젝트가 복제되었습니다." });
+        setToast({ type: "success", message: result.message });
       } else {
         setToast({ type: "error", message: result.message });
       }
@@ -132,18 +154,12 @@ export default function ProjectManager({
 
   async function handleDeploy(project: ProjectRecord) {
     const result = await postProjectAction({ action: "deploy", slug: project.slug });
-    if (result.success) {
-      setProjects((prev) =>
-        prev.map((p) => (p.slug === project.slug ? { ...p, is_published: true } : p)),
-      );
-      setToast({ type: "success", message: `${result.message} ${result.data?.url ?? ""}` });
-    } else {
-      setToast({ type: "error", message: result.message });
-    }
+    const message = result.data?.message ?? result.message ?? "Deploy 기능 준비중";
+    setToast({ type: "success", message });
   }
 
   async function handleDelete(project: ProjectRecord) {
-    if (!window.confirm(`"${project.display_name}" 프로젝트를 삭제할까요?`)) return;
+    if (!window.confirm(`"${project.display_name}" 사이트를 삭제할까요?`)) return;
     const result = await postProjectAction({ action: "delete", slug: project.slug });
     if (result.success) {
       setProjects((prev) => prev.filter((p) => p.slug !== project.slug));
@@ -155,25 +171,25 @@ export default function ProjectManager({
 
   async function handleSelect(project: ProjectRecord) {
     await setActiveProjectSlug(project.slug);
-    setToast({ type: "success", message: `편집 프로젝트: ${project.display_name}` });
+    setToast({ type: "success", message: `편집 사이트: ${project.display_name}` });
   }
 
   return (
     <AdminPageShell
-      title="프로젝트 관리"
-      description="CH Labs Landing Builder — 프로젝트 생성·복제·배포를 관리합니다."
+      title="사이트 관리"
+      description="CH Labs Landing Builder — 독립 사이트 생성·복제·배포를 관리합니다."
     >
       <div className="mx-auto max-w-5xl space-y-8 pb-8">
         <AdminToast toast={toast} />
 
         <section className={adminCardClass}>
-          <h2 className="text-lg font-semibold text-navy">새 프로젝트 생성</h2>
+          <h2 className="text-lg font-semibold text-navy">새 사이트 생성</h2>
           <p className="mt-1 text-sm text-navy/60">
-            기본 템플릿(현재 기본 프로젝트)을 복사해 5분 안에 새 랜딩을 시작할 수 있습니다.
+            기존 사이트를 복제해 DB·이미지·SEO·설정을 독립 프로젝트로 생성합니다.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className={adminLabelClass}>프로젝트명</label>
+              <label className={adminLabelClass}>프로젝트명 *</label>
               <input
                 className={adminInputClass}
                 value={form.displayName}
@@ -182,7 +198,16 @@ export default function ProjectManager({
               />
             </div>
             <div>
-              <label className={adminLabelClass}>URL Slug</label>
+              <label className={adminLabelClass}>사이트명</label>
+              <input
+                className={adminInputClass}
+                value={form.siteName}
+                onChange={(e) => setForm((f) => ({ ...f, siteName: e.target.value }))}
+                placeholder="CMS 식별명 (비우면 자동)"
+              />
+            </div>
+            <div>
+              <label className={adminLabelClass}>Slug *</label>
               <input
                 className={adminInputClass}
                 value={form.slug}
@@ -192,7 +217,7 @@ export default function ProjectManager({
               />
             </div>
             <div>
-              <label className={adminLabelClass}>도메인 (선택)</label>
+              <label className={adminLabelClass}>대표 도메인 (선택)</label>
               <input
                 className={adminInputClass}
                 value={form.domain}
@@ -202,12 +227,50 @@ export default function ProjectManager({
               />
             </div>
             <div>
+              <label className={adminLabelClass}>전화번호</label>
+              <input
+                className={adminInputClass}
+                value={form.contactPhone}
+                onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
+                placeholder="1844-0148"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className={adminLabelClass}>대표 이미지 URL</label>
+              <input
+                className={adminInputClass}
+                value={form.heroImageUrl}
+                onChange={(e) => setForm((f) => ({ ...f, heroImageUrl: e.target.value }))}
+                placeholder="https://..."
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className={adminLabelClass}>SEO 제목</label>
+              <input
+                className={adminInputClass}
+                value={form.seoTitle}
+                onChange={(e) => setForm((f) => ({ ...f, seoTitle: e.target.value }))}
+                placeholder="브라우저 탭 제목"
+              />
+            </div>
+            <div>
+              <label className={adminLabelClass}>SEO 설명</label>
+              <input
+                className={adminInputClass}
+                value={form.seoDescription}
+                onChange={(e) => setForm((f) => ({ ...f, seoDescription: e.target.value }))}
+                placeholder="메타 description"
+              />
+            </div>
+            <div className="sm:col-span-2">
               <label className={adminLabelClass}>복제 원본 Slug (선택)</label>
               <input
                 className={adminInputClass}
                 value={form.cloneFromSlug}
                 onChange={(e) => setForm((f) => ({ ...f, cloneFromSlug: e.target.value }))}
-                placeholder="비우면 기본 템플릿 사용"
+                placeholder="비우면 기본 사이트에서 복제"
                 dir="ltr"
               />
             </div>
@@ -220,7 +283,7 @@ export default function ProjectManager({
               className={adminPrimaryButtonClass}
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              프로젝트 생성
+              사이트 생성
             </button>
           </div>
         </section>
@@ -228,9 +291,9 @@ export default function ProjectManager({
         <section className={adminCardClass}>
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-navy">프로젝트 목록</h2>
+              <h2 className="text-lg font-semibold text-navy">사이트 목록</h2>
               <p className="mt-1 text-sm text-navy/60">
-                편집할 프로젝트를 선택한 뒤 CMS 메뉴에서 콘텐츠를 수정하세요.
+                편집할 사이트를 선택한 뒤 CMS·SEO 메뉴에서 콘텐츠를 수정하세요.
               </p>
             </div>
             <div className="relative max-w-xs">
@@ -249,6 +312,7 @@ export default function ProjectManager({
               const publicPath = getProjectPublicUrl(project);
               const deployUrl = getProjectDeployUrl(project);
               const isActive = activeSlug === project.slug;
+              const status = project.status ?? (project.is_published ? "published" : "draft");
 
               return (
                 <div
@@ -264,14 +328,8 @@ export default function ProjectManager({
                             기본
                           </span>
                         )}
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
-                            project.is_published
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-navy/10 text-navy/60"
-                          }`}
-                        >
-                          {project.is_published ? "공개" : "비공개"}
+                        <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs text-navy/70">
+                          {STATUS_LABELS[status]}
                         </span>
                         {isActive && (
                           <span className="rounded-full bg-gold/20 px-2 py-0.5 text-xs text-navy">
@@ -308,7 +366,7 @@ export default function ProjectManager({
                         className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm font-medium text-navy hover:bg-gold/20"
                       >
                         <Rocket size={14} className="mr-1 inline" />
-                        배포
+                        Deploy
                       </button>
                       <button
                         type="button"
